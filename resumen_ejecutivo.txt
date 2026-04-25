@@ -30,14 +30,14 @@ Desarrollar una plataforma SaaS web, escalable y personalizable, que permita a m
 
 ---
 
-## 3. MODELO SaaS (SOFTWARE COMO SERVICIO)
+## 3. MODELO DE NEGOCIO (WHITE LABEL / INSTANCIA ÚNICA)
 
-El sistema se comercializará bajo un modelo SaaS, donde:
+La plataforma se distribuye como una solución de marca blanca:
 
-* Una única plataforma central atiende múltiples clientes
-* Cada cliente (empresa) cuenta con su propio entorno
-* El sistema es configurable sin necesidad de duplicar código
-* Se ofrece bajo suscripción mensual
+* Cada cliente cuenta con su propia instancia independiente del sistema.
+* Cada instancia posee su propia base de datos aislada.
+* El despliegue se realiza de forma individual por cliente (ej: Hostinger).
+* Personalización total del sistema antes del despliegue.
 
 ---
 
@@ -45,11 +45,11 @@ El sistema se comercializará bajo un modelo SaaS, donde:
 
 ### 4.1 Tipo de Arquitectura
 
-Se implementará una combinación de:
+Se implementará una arquitectura de instancia única:
 
-* Arquitectura Hexagonal (Ports & Adapters)
-* Arquitectura basada en API REST
-* Modelo Multi-Tenant
+* Frontend y Backend desacoplados.
+* Base de datos independiente por cliente.
+* Configuración centralizada mediante variables de entorno (.env) para facilitar la personalización rápida.
 
 ---
 
