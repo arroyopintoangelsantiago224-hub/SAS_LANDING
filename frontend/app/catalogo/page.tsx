@@ -2,6 +2,9 @@
 
 import { siteConfig } from '@/config/site';
 import ProductCard from '@/components/tenant/ProductCard';
+import BannerCarousel from '@/components/tenant/BannerCarousel';
+import { cn } from '@/lib/utils';
+import { useState } from 'react';
 
 // Datos de prueba (estos vendrán del Backend después)
 const MOCK_PRODUCTS = [
@@ -36,35 +39,31 @@ const MOCK_PRODUCTS = [
 ];
 
 export default function CatalogoPage() {
+  const [activeCategory, setActiveCategory] = useState('Todos');
+
   return (
     <div className="pb-20">
-      {/* Hero Section */}
-      <section 
-        className="py-12 md:py-20 text-white"
-        style={{ backgroundColor: siteConfig.colors.primary }}
-      >
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
-            {siteConfig.name}
-          </h1>
-          <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">
-            {siteConfig.description}
-          </p>
-        </div>
-      </section>
+      {/* Carrusel de Banners Personalizable */}
+      <BannerCarousel />
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 -mt-10">
-        {/* Categories Bar (Static for now) */}
-        <div className="flex space-x-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
-          {['Todos', 'Hamburguesas', 'Pizzas', 'Snacks', 'Bebidas'].map((cat, i) => (
+      <div className="container mx-auto px-4 mt-12">
+        {/* Barra de Categorías Moderna */}
+        <div className="sticky top-20 z-40 bg-gray-50/80 backdrop-blur-md py-4 -mx-4 px-4 mb-10 overflow-x-auto no-scrollbar flex items-center space-x-3">
+          {['Todos', 'Hamburguesas', 'Pizzas', 'Snacks', 'Bebidas'].map((cat) => (
             <button
               key={cat}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm transition-all ${
-                i === 0 
-                ? 'bg-white text-gray-900 ring-2 ring-offset-2 ring-gray-200' 
-                : 'bg-white/80 text-gray-600 hover:bg-white'
-              }`}
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                "px-8 py-3 rounded-2xl text-sm font-bold transition-all duration-300 whitespace-nowrap",
+                activeCategory === cat
+                  ? "text-white shadow-xl shadow-gray-200 scale-105"
+                  : "bg-white text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+              )}
+              style={{ 
+                backgroundColor: activeCategory === cat ? siteConfig.colors.primary : undefined,
+                boxShadow: activeCategory === cat ? `0 10px 20px -5px ${siteConfig.colors.primary}40` : undefined
+              }}
             >
               {cat}
             </button>
@@ -72,7 +71,7 @@ export default function CatalogoPage() {
         </div>
 
         {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {MOCK_PRODUCTS.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
