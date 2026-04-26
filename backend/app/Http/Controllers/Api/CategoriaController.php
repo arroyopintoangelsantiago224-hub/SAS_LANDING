@@ -13,7 +13,8 @@ class CategoriaController extends Controller
         $query = Categoria::query();
         
         if ($request->has('admin')) {
-            return response()->json($query->orderBy('orden')->get());
+            // Include product count for admin
+            return response()->json($query->withCount('productos')->orderBy('orden')->get());
         }
 
         return response()->json($query->where('activa', true)->orderBy('orden')->get());
@@ -30,7 +31,7 @@ class CategoriaController extends Controller
         ]);
 
         $categoria = Categoria::create($validated);
-        return response()->json($categoria, 211);
+        return response()->json($categoria, 201);
     }
 
     public function show(string $id)
@@ -54,9 +55,24 @@ class CategoriaController extends Controller
         return response()->json($categoria);
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
         $categoria = Categoria::findOrFail($id);
+        $productCount = $categoria->productos()->count();
+
+        if ($productCount > 0 && !$request->has('force')) {
+            return response()->json([
+                'error' => 'Conflict',
+                'message' => "No se puede eliminar la categoría porque tiene {$productCount} productos relacionados.",
+                'product_count' => $productCount
+            ], 409);
+        }
+
+        if ($request->has('force')) {
+            // Delete related products as well
+            $categoria->productos()->delete();
+        }
+
         $categoria->delete();
         return response()->json(['message' => 'Categoría eliminada correctamente']);
     }

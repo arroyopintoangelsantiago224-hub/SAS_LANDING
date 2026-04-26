@@ -14,14 +14,14 @@ class UploadController extends Controller
     {
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'type' => 'required|string|in:items,banners',
+            'type' => 'required|string|in:items,banners,site',
             'id' => 'nullable|string'
         ]);
 
         if ($request->hasFile('image')) {
             $image = $request->file('image');
             $type = $request->type;
-            $id = $request->id ?? 'new';
+            $id = $request->id ?? 'general';
             
             // Create manager with driver
             $manager = new ImageManager(new Driver());

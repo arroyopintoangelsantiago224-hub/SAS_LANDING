@@ -6,12 +6,14 @@ import { siteConfig } from '@/config/site';
 import { useCartStore } from '@/store/useCartStore';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { fetchConfigs } from '@/lib/api';
 
 export default function Header() {
   const itemCount = useCartStore((state) => state.getItemCount());
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [configs, setConfigs] = useState<any>({});
 
   const primaryColor = siteConfig.colors.primary === '#000000' ? '#E8A030' : siteConfig.colors.primary;
 
@@ -21,8 +23,18 @@ export default function Header() {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
+    loadConfigs();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  async function loadConfigs() {
+    try {
+      const data = await fetchConfigs();
+      setConfigs(data);
+    } catch (error) {
+      console.error('Error loading header configs:', error);
+    }
+  }
 
   useEffect(() => {
     const handleResize = () => {
@@ -32,37 +44,45 @@ export default function Header() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const siteName = configs.site_name || siteConfig.name;
+
   return (
     <>
       <header 
         className={cn(
           "fixed top-0 z-50 w-full transition-all duration-500",
           isScrolled || isMenuOpen
-            ? "bg-white/80 dark:bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border)] py-3 shadow-sm" 
+            ? "bg-white/80 dark:bg-[#0A0A0C]/80 backdrop-blur-xl border-b border-black/5 dark:border-white/5 py-3 shadow-sm" 
             : "bg-transparent py-6"
         )}
       >
         <div className="container mx-auto px-4 flex items-center justify-between">
           {/* Logo & Name */}
           <Link href="/" className="flex items-center group flex-shrink-0" onClick={() => setIsMenuOpen(false)}>
-            <div 
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-lg transition-transform group-hover:scale-105 active:scale-95"
-              style={{ 
-                backgroundColor: primaryColor,
-                boxShadow: `0 8px 16px -4px ${primaryColor}40`
-              }}
-            >
-              {siteConfig.name.charAt(0)}
-            </div>
+            {configs.site_logo ? (
+              <div className="w-10 h-10 md:w-12 md:h-12 overflow-hidden transition-transform group-hover:scale-105 active:scale-95">
+                <img src={configs.site_logo} alt={siteName} className="w-full h-full object-contain" />
+              </div>
+            ) : (
+              <div 
+                className="w-10 h-10 rounded-xl flex items-center justify-center text-black font-black text-xl shadow-lg transition-transform group-hover:scale-105 active:scale-95"
+                style={{ 
+                  backgroundColor: primaryColor,
+                  boxShadow: `0 8px 16px -4px ${primaryColor}40`
+                }}
+              >
+                {siteName.charAt(0)}
+              </div>
+            )}
             <div className="ml-3 flex flex-col">
               <span className={cn(
                 "font-black text-lg tracking-tighter leading-none transition-colors",
                 (!isScrolled && !isMenuOpen) ? "text-white" : "text-gray-900 dark:text-white"
               )}>
-                {siteConfig.name}
+                {siteName}
               </span>
-              <span className="text-[9px] uppercase tracking-[0.2em] font-black text-[var(--muted2)] leading-tight mt-0.5">
-                Premium Store
+              <span className="text-[9px] uppercase tracking-[0.2em] font-black text-gray-500 dark:text-gray-400 leading-tight mt-0.5">
+                {configs.site_description || 'Premium Store'}
               </span>
             </div>
           </Link>
@@ -75,7 +95,7 @@ export default function Header() {
                 href={item === 'Catálogo' ? '/catalogo' : `/${item.toLowerCase()}`}
                 className={cn(
                   "text-xs font-black uppercase tracking-widest transition-all hover:scale-105",
-                  isScrolled ? "text-gray-600 dark:text-[var(--muted)] hover:text-black dark:hover:text-white" : "text-white/80 hover:text-white"
+                  isScrolled ? "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white" : "text-white/80 hover:text-white"
                 )}
               >
                 {item}
@@ -89,7 +109,7 @@ export default function Header() {
               href="/carrito" 
               className={cn(
                 "relative p-2.5 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-white/5 active:scale-90",
-                (!isScrolled && !isMenuOpen) ? "text-white" : "text-gray-600 dark:text-[var(--text)]"
+                (!isScrolled && !isMenuOpen) ? "text-white" : "text-gray-600 dark:text-white"
               )}
               onClick={() => setIsMenuOpen(false)}
             >
@@ -108,13 +128,13 @@ export default function Header() {
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className={cn(
                 "p-2.5 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-white/5 active:scale-90 md:hidden",
-                (!isScrolled && !isMenuOpen) ? "text-white" : "text-gray-600 dark:text-[var(--text)]"
+                (!isScrolled && !isMenuOpen) ? "text-white" : "text-gray-600 dark:text-white"
               )}
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
 
-            <div className="hidden md:block h-6 w-[1px] bg-[var(--border)] mx-2" />
+            <div className="hidden md:block h-6 w-[1px] bg-black/5 dark:bg-white/5 mx-2" />
 
             <Link 
               href="/admin"
@@ -134,7 +154,7 @@ export default function Header() {
 
       {/* Mobile Menu Overlay */}
       <div className={cn(
-        "fixed inset-0 z-40 bg-white dark:bg-[var(--bg)] transition-all duration-700 md:hidden",
+        "fixed inset-0 z-40 bg-white dark:bg-[#0A0A0C] transition-all duration-700 md:hidden",
         isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none translate-x-full"
       )}>
         <div className="flex flex-col h-full pt-32 px-8">
@@ -154,22 +174,6 @@ export default function Header() {
               </Link>
             ))}
           </nav>
-          
-          <div className="mt-auto mb-12 space-y-8">
-            <div className="h-[1px] w-full bg-[var(--border)]" />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-black text-[var(--muted2)] uppercase tracking-[0.3em] mb-2">Contacto</p>
-                <p className="text-2xl font-black text-gray-900 dark:text-white tracking-tighter">{siteConfig.whatsapp}</p>
-              </div>
-              <div 
-                className="w-14 h-14 rounded-2xl flex items-center justify-center text-black shadow-2xl"
-                style={{ backgroundColor: primaryColor }}
-              >
-                <User className="w-7 h-7" />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </>
