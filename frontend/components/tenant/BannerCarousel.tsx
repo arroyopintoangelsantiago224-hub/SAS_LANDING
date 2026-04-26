@@ -55,23 +55,17 @@ export default function BannerCarousel() {
                 className="absolute inset-0 w-full h-full object-cover"
               />
               
-              <div className="relative z-20 h-full container mx-auto px-4 flex flex-col justify-center items-start">
+              <div className="relative z-20 h-full container mx-auto px-4 flex flex-col justify-center items-start pt-16 md:pt-0">
                 <div className="max-w-2xl animate-in fade-in slide-in-from-left-8 duration-1000">
-                  <span 
-                    className="inline-block px-4 py-1.5 rounded-full text-white text-xs font-bold uppercase tracking-widest mb-6"
-                    style={{ backgroundColor: siteConfig.colors.primary }}
-                  >
-                    Bienvenido a {siteConfig.name}
-                  </span>
-                  <h2 className="text-4xl md:text-7xl font-black text-white mb-6 leading-tight">
+                  <h2 className="text-3xl md:text-7xl font-black text-white mb-4 sm:mb-6 leading-tight">
                     {banner.title}
                   </h2>
-                  <p className="text-lg md:text-xl text-white/80 mb-10 leading-relaxed max-w-lg">
+                  <p className="text-base md:text-xl text-white/80 mb-8 sm:mb-10 leading-relaxed max-w-lg line-clamp-3 sm:line-clamp-none">
                     {banner.subtitle}
                   </p>
-                  <div className="flex flex-wrap gap-4">
+                  <div className="flex flex-wrap gap-3 sm:gap-4">
                     <button 
-                      className="px-8 py-4 rounded-2xl text-white font-bold text-lg transition-all hover:scale-105 active:scale-95 shadow-xl"
+                      className="px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl text-white font-bold text-sm sm:text-lg transition-all hover:scale-105 active:scale-95 shadow-xl"
                       style={{ 
                         backgroundColor: siteConfig.colors.primary,
                         boxShadow: `0 12px 24px -6px ${siteConfig.colors.primary}60`
@@ -79,7 +73,7 @@ export default function BannerCarousel() {
                     >
                       Ordenar Ahora
                     </button>
-                    <button className="px-8 py-4 rounded-2xl bg-white/10 backdrop-blur-md text-white border border-white/20 font-bold text-lg transition-all hover:bg-white/20 active:scale-95">
+                    <button className="px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md text-white border border-white/20 font-bold text-sm sm:text-lg transition-all hover:bg-white/20 active:scale-95">
                       Ver Menú
                     </button>
                   </div>
