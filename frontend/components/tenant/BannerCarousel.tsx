@@ -4,34 +4,35 @@ import React, { useEffect, useState } from 'react';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import { siteConfig } from '@/config/site';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { fetchBanners } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 interface Banner {
   id: number;
-  title: string;
-  subtitle: string;
-  image: string;
+  titulo: string;
+  subtitulo: string;
+  imagen_url: string;
 }
 
-// Estos datos se podrán configurar luego desde el backend/env
-const DEFAULT_BANNERS: Banner[] = [
-  {
-    id: 1,
-    title: 'Sabores que Enamoran',
-    subtitle: 'Descubre nuestra selección premium de platos artesanales.',
-    image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070&auto=format&fit=crop',
-  },
-  {
-    id: 2,
-    title: 'Directo a tu Puerta',
-    subtitle: 'Pedidos rápidos, calientes y con la mejor calidad.',
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?q=80&w=2070&auto=format&fit=crop',
-  },
-];
-
 export default function BannerCarousel() {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 5000 })]);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [Autoplay({ delay: 6000 })]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const primaryColor = siteConfig.colors.primary === '#000000' ? '#E8A030' : siteConfig.colors.primary;
+
+  useEffect(() => {
+    async function loadBanners() {
+      try {
+        const data = await fetchBanners();
+        setBanners(data);
+      } catch (error) {
+        console.error('Error fetching banners:', error);
+      }
+    }
+    loadBanners();
+  }, []);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -40,41 +41,51 @@ export default function BannerCarousel() {
     });
   }, [emblaApi]);
 
+  if (banners.length === 0) {
+    return <div className="h-[400px] md:h-[650px] bg-[var(--card2)] animate-pulse rounded-[var(--radius2)] mx-4 mt-4" />;
+  }
+
   return (
-    <div className="relative overflow-hidden bg-gray-900 h-[400px] md:h-[600px] -mt-24">
+    <div className="relative overflow-hidden h-[450px] md:h-[650px] md:rounded-[var(--radius2)] md:mx-4 md:mt-4 group shadow-2xl">
       <div className="overflow-hidden h-full" ref={emblaRef}>
         <div className="flex h-full">
-          {DEFAULT_BANNERS.map((banner) => (
+          {banners.map((banner) => (
             <div key={banner.id} className="relative flex-[0_0_100%] min-w-0 h-full">
-              {/* Overlay con gradiente */}
-              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-10" />
-              
+              {/* Image with Parallax Effect (Simulated) */}
               <img
-                src={banner.image}
-                alt={banner.title}
-                className="absolute inset-0 w-full h-full object-cover"
+                src={banner.imagen_url}
+                alt={banner.titulo}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear group-hover:scale-110"
               />
               
-              <div className="relative z-20 h-full container mx-auto px-4 flex flex-col justify-center items-start pt-16 md:pt-0">
-                <div className="max-w-2xl animate-in fade-in slide-in-from-left-8 duration-1000">
-                  <h2 className="text-3xl md:text-7xl font-black text-white mb-4 sm:mb-6 leading-tight">
-                    {banner.title}
+              {/* Modern Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent z-10" />
+              
+              <div className="relative z-20 h-full container mx-auto px-6 md:px-16 flex flex-col justify-end pb-20 md:pb-32">
+                <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-12 duration-1000">
+                  <span className="inline-block px-4 py-1 rounded-full bg-[var(--accent)] text-black text-[10px] font-black uppercase tracking-[0.2em] mb-6">
+                    Destacado
+                  </span>
+                  <h2 className="text-4xl md:text-8xl font-black text-white mb-6 leading-[0.9] tracking-tighter">
+                    {banner.titulo}
                   </h2>
-                  <p className="text-base md:text-xl text-white/80 mb-8 sm:mb-10 leading-relaxed max-w-lg line-clamp-3 sm:line-clamp-none">
-                    {banner.subtitle}
+                  <p className="text-sm md:text-lg text-white/70 mb-10 leading-relaxed max-w-lg">
+                    {banner.subtitulo}
                   </p>
-                  <div className="flex flex-wrap gap-3 sm:gap-4">
+                  <div className="flex flex-wrap gap-4">
                     <button 
-                      className="px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl text-white font-bold text-sm sm:text-lg transition-all hover:scale-105 active:scale-95 shadow-xl"
+                      className="group px-8 py-4 rounded-full text-black font-black text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-3"
                       style={{ 
-                        backgroundColor: siteConfig.colors.primary,
-                        boxShadow: `0 12px 24px -6px ${siteConfig.colors.primary}60`
+                        backgroundColor: primaryColor,
+                        boxShadow: `0 20px 40px -10px ${primaryColor}60`
                       }}
                     >
                       Ordenar Ahora
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <button className="px-6 py-3 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl bg-white/10 backdrop-blur-md text-white border border-white/20 font-bold text-sm sm:text-lg transition-all hover:bg-white/20 active:scale-95">
-                      Ver Menú
+                    <button className="px-8 py-4 rounded-full bg-white/10 backdrop-blur-xl text-white border border-white/20 font-black text-xs uppercase tracking-widest transition-all hover:bg-white/20 active:scale-95">
+                      Explorar Menú
                     </button>
                   </div>
                 </div>
@@ -84,41 +95,38 @@ export default function BannerCarousel() {
         </div>
       </div>
 
-      {/* Indicadores */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex space-x-3">
-        {DEFAULT_BANNERS.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => emblaApi?.scrollTo(index)}
-            className={cn(
-              "h-1.5 rounded-full transition-all duration-300",
-              selectedIndex === index ? "w-8" : "w-2 bg-white/40 hover:bg-white/60"
-            )}
-            style={{ 
-              backgroundColor: selectedIndex === index ? siteConfig.colors.primary : undefined 
-            }}
-          />
-        ))}
+      {/* Modern Navigation Controls */}
+      <div className="absolute bottom-10 right-6 md:right-16 z-30 flex items-center gap-6">
+        <div className="flex space-x-2">
+          {banners.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => emblaApi?.scrollTo(index)}
+              className={cn(
+                "h-1 rounded-full transition-all duration-500",
+                selectedIndex === index ? "w-12" : "w-4 bg-white/20 hover:bg-white/40"
+              )}
+              style={{ 
+                backgroundColor: selectedIndex === index ? primaryColor : undefined 
+              }}
+            />
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => emblaApi?.scrollPrev()}
+            className="p-3 rounded-full glass hover:bg-[var(--accent)] hover:text-black transition-all border-white/10"
+          >
+            <ChevronLeft className="w-5 h-5 text-white group-hover:text-inherit" />
+          </button>
+          <button 
+            onClick={() => emblaApi?.scrollNext()}
+            className="p-3 rounded-full glass hover:bg-[var(--accent)] hover:text-black transition-all border-white/10"
+          >
+            <ChevronRight className="w-5 h-5 text-white group-hover:text-inherit" />
+          </button>
+        </div>
       </div>
-
-      {/* Controles laterales */}
-      <button 
-        onClick={() => emblaApi?.scrollPrev()}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-all hidden md:block"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-      <button 
-        onClick={() => emblaApi?.scrollNext()}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 p-3 rounded-full bg-white/10 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 transition-all hidden md:block"
-      >
-        <ChevronRight className="w-6 h-6" />
-      </button>
     </div>
   );
-}
-
-// Necesitamos importar 'cn' ya que no se pasó automáticamente
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }
