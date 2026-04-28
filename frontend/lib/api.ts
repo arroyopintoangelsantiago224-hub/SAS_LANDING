@@ -33,12 +33,12 @@ export async function uploadImage(file: File, type: 'items' | 'banners' | 'site'
   formData.append('type', type);
   if (id) formData.append('id', id.toString());
 
-  const res = await fetch(`${API_URL}/admin/upload`, {
+  const res = await fetch(`/api/proxy/admin/upload`, {
     method: 'POST',
     headers: { 'Accept': 'application/json' },
     body: formData,
   });
-  
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || 'Failed to upload image');
@@ -47,13 +47,13 @@ export async function uploadImage(file: File, type: 'items' | 'banners' | 'site'
 }
 
 export async function adminFetchProducts() {
-  const res = await fetch(`${API_URL}/admin/productos?admin=true`, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`/api/proxy/admin/productos?admin=true`, { headers: { 'Accept': 'application/json' } });
   return res.json();
 }
 
 export async function adminSaveProduct(product: any) {
   const method = product.id ? 'PUT' : 'POST';
-  const url = product.id ? `${API_URL}/admin/productos/${product.id}` : `${API_URL}/admin/productos`;
+  const url = product.id ? `/api/proxy/admin/productos/${product.id}` : `/api/proxy/admin/productos`;
   const res = await fetch(url, {
     method,
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -67,19 +67,19 @@ export async function adminSaveProduct(product: any) {
 }
 
 export async function adminDeleteProduct(id: number) {
-  const res = await fetch(`${API_URL}/admin/productos/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`/api/proxy/admin/productos/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
   return res.json();
 }
 
 // Categories Admin
 export async function adminFetchCategories() {
-  const res = await fetch(`${API_URL}/admin/categorias?admin=true`, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`/api/proxy/admin/categorias?admin=true`, { headers: { 'Accept': 'application/json' } });
   return res.json();
 }
 
 export async function adminSaveCategory(category: any) {
   const method = category.id ? 'PUT' : 'POST';
-  const url = category.id ? `${API_URL}/admin/categorias/${category.id}` : `${API_URL}/admin/categorias`;
+  const url = category.id ? `/api/proxy/admin/categorias/${category.id}` : `/api/proxy/admin/categorias`;
   const res = await fetch(url, {
     method,
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -93,7 +93,7 @@ export async function adminSaveCategory(category: any) {
 }
 
 export async function adminDeleteCategory(id: number, force: boolean = false) {
-  const url = force ? `${API_URL}/admin/categorias/${id}?force=true` : `${API_URL}/admin/categorias/${id}`;
+  const url = force ? `/api/proxy/admin/categorias/${id}?force=true` : `/api/proxy/admin/categorias/${id}`;
   const res = await fetch(url, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
   if (!res.ok) {
     return res.json(); // Return error body to handle 409
@@ -103,13 +103,13 @@ export async function adminDeleteCategory(id: number, force: boolean = false) {
 
 // Banners Admin
 export async function adminFetchBanners() {
-  const res = await fetch(`${API_URL}/banners?admin=true`, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`/api/proxy/admin/banners?admin=true`, { headers: { 'Accept': 'application/json' } });
   return res.json();
 }
 
 export async function adminSaveBanner(banner: any) {
   const method = banner.id ? 'PUT' : 'POST';
-  const url = banner.id ? `${API_URL}/admin/banners/${banner.id}` : `${API_URL}/admin/banners`;
+  const url = banner.id ? `/api/proxy/admin/banners/${banner.id}` : `/api/proxy/admin/banners`;
   const res = await fetch(url, {
     method,
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
@@ -123,12 +123,12 @@ export async function adminSaveBanner(banner: any) {
 }
 
 export async function adminDeleteBanner(id: number) {
-  const res = await fetch(`${API_URL}/admin/banners/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`/api/proxy/admin/banners/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
   return res.json();
 }
 
 export async function adminUpdateConfigs(configs: any) {
-  const res = await fetch(`${API_URL}/admin/configs`, {
+  const res = await fetch(`/api/proxy/admin/configs`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     body: JSON.stringify(configs),

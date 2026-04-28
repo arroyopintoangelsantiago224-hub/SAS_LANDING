@@ -17,12 +17,16 @@ interface CartStore {
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
+  isCartOpen: boolean;
+  setCartOpen: (open: boolean) => void;
 }
 
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      isCartOpen: false,
+      setCartOpen: (open) => set({ isCartOpen: open }),
       addItem: (product) => {
         const currentItems = get().items;
         const existingItem = currentItems.find((item) => item.id === product.id);
@@ -34,9 +38,13 @@ export const useCartStore = create<CartStore>()(
                 ? { ...item, cantidad: item.cantidad + 1 }
                 : item
             ),
+            isCartOpen: true,
           });
         } else {
-          set({ items: [...currentItems, { ...product, cantidad: 1 }] });
+          set({ 
+            items: [...currentItems, { ...product, cantidad: 1 }],
+            isCartOpen: true 
+          });
         }
       },
       removeItem: (id) => {

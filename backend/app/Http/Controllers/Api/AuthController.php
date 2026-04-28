@@ -10,40 +10,29 @@ class AuthController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function googleLogin(Request $request)
     {
-        //
-    }
+        $userData = $request->validate([
+            'email' => 'required|email',
+            'name' => 'required|string',
+            'image' => 'nullable|string',
+            'google_id' => 'nullable|string',
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $user = \App\Models\User::updateOrCreate(
+            ['email' => $userData['email']],
+            [
+                'nombre' => $userData['name'],
+                'google_id' => $userData['google_id'],
+                'avatar_url' => $userData['image'],
+                // Set a random password if it doesn't have one
+                'contraseña' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(24)),
+            ]
+        );
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return response()->json([
+            'message' => 'Usuario sincronizado correctamente',
+            'user' => $user
+        ]);
     }
 }
