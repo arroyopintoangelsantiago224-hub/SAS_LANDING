@@ -54,4 +54,9 @@ class User extends Authenticatable
             'contraseña' => 'hashed',
         ];
     }
+
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'usuario_id');
+    }
 }

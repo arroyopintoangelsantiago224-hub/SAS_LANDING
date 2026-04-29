@@ -21,4 +21,9 @@ class Usuario extends Model
     protected $hidden = [
         'contraseña',
     ];
+
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'usuario_id');
+    }
 }

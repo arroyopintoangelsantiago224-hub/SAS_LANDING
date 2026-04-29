@@ -9,6 +9,14 @@ export interface CartItem {
   cantidad: number;
 }
 
+export interface CustomerData {
+  nombre: string;
+  telefono: string;
+  direccion: string;
+  latitud?: number;
+  longitud?: number;
+}
+
 interface CartStore {
   items: CartItem[];
   addItem: (product: any) => void;
@@ -19,6 +27,10 @@ interface CartStore {
   getItemCount: () => number;
   isCartOpen: boolean;
   setCartOpen: (open: boolean) => void;
+  customerData: CustomerData;
+  setCustomerData: (data: Partial<CustomerData>) => void;
+  paymentMethod: string;
+  setPaymentMethod: (method: string) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -61,7 +73,7 @@ export const useCartStore = create<CartStore>()(
           ),
         });
       },
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ items: [], customerData: { nombre: '', telefono: '', direccion: '' }, paymentMethod: '' }),
       getTotal: () => {
         return get().items.reduce(
           (total, item) => total + Number(item.precio) * item.cantidad,
@@ -71,6 +83,16 @@ export const useCartStore = create<CartStore>()(
       getItemCount: () => {
         return get().items.reduce((count, item) => count + item.cantidad, 0);
       },
+      customerData: {
+        nombre: '',
+        telefono: '',
+        direccion: '',
+      },
+      setCustomerData: (data) => set((state) => ({
+        customerData: { ...state.customerData, ...data }
+      })),
+      paymentMethod: '',
+      setPaymentMethod: (method) => set({ paymentMethod: method }),
     }),
     {
       name: 'cart-storage',

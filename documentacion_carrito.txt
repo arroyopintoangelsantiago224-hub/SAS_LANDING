@@ -1,0 +1,122 @@
+📄 Documentación breve – Sistema de carrito
+🎯 Objetivo
+
+Permitir a cualquier usuario (logueado o no) realizar pedidos de forma rápida, con persistencia de datos y mínima fricción.
+
+🧱 1. Estructura del carrito
+
+El carrito debe manejar:
+
+📦 Productos
+id_producto
+nombre
+precio
+cantidad
+imagen (opcional)
+💰 Totales
+subtotal
+total
+📍 Datos del cliente
+nombre
+teléfono
+dirección (texto)
+latitud / longitud (Google Maps)
+💳 Método de pago
+tipo (Nequi, Daviplata, Contraentrega, etc.)
+estado_pago:
+pendiente
+por_verificar
+pagado
+📊 Estado del pedido
+pendiente
+en preparación
+en camino
+entregado
+cancelado
+🔁 2. Persistencia del carrito
+🟢 Usuario NO logueado
+Guardar en localStorage
+Mantener:
+productos
+datos básicos (dirección, nombre)
+
+👉 Se conserva aunque cierre navegador
+
+🔵 Usuario logueado
+Guardar en:
+BD (principal)
+localStorage (respaldo rápido)
+
+👉 Permite:
+
+recuperar carrito desde cualquier dispositivo
+historial
+🔐 3. Manejo según tipo de usuario
+👤 Usuario NO logueado
+Flujo:
+Agrega productos 🛒
+Abre carrito
+Click en “Finalizar pedido”
+
+👉 Mostrar opción:
+
+Continuar con Google (recomendado)
+O continuar como invitado
+Si continúa como invitado:
+Llenar:
+nombre
+teléfono
+dirección
+
+👉 Se crea pedido SIN cuenta
+
+🔐 Usuario logueado
+Flujo:
+Agrega productos
+Click en “Finalizar pedido”
+Datos se autocompletan
+
+👉 Solo confirma pedido
+
+📦 4. Creación del pedido (lógica clave)
+
+👉 SIEMPRE:
+
+El pedido se guarda primero en BD
+Estado inicial:
+“pendiente de pago”
+💳 5. Flujo de pago (sin pasarela)
+Usuario crea pedido
+Se muestra pantalla de pago:
+QR
+instrucciones
+Usuario da clic:
+👉 “Ya pagué”
+Estado cambia a:
+“por verificar”
+Admin valida
+🔄 6. Recuperación de carrito
+
+Cuando usuario regresa:
+
+Si hay carrito guardado:
+👉 restaurar automáticamente
+Mostrar:
+👉 “Tienes un pedido pendiente”
+🛠️ 7. Panel administrador
+
+Debe permitir:
+
+Ver pedidos
+Cambiar estados
+Ver dirección en mapa
+Confirmar pagos
+⚠️ Reglas importantes
+No obligar login al inicio ❌
+No perder carrito ❌
+No depender de que el usuario vuelva ❌
+🧨 Resumen final (clave de negocio)
+Usuario no logueado → compra rápida sin fricción
+Usuario logueado → mejor experiencia + seguimiento
+Pedido SIEMPRE se guarda antes del pago
+Carrito SIEMPRE persistente

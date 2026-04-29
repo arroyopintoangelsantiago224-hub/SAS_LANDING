@@ -135,3 +135,22 @@ export async function adminUpdateConfigs(configs: any) {
   });
   return res.json();
 }
+
+// Orders Admin
+export async function adminFetchOrders() {
+  const res = await fetch(`/api/proxy/admin/pedidos?admin=true`, { headers: { 'Accept': 'application/json' } });
+  return res.json();
+}
+
+export async function adminUpdateOrder(id: number, data: any) {
+  const res = await fetch(`/api/proxy/admin/pedidos/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to update order');
+  }
+  return res.json();
+}

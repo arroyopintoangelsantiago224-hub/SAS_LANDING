@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ProductoController;
 use App\Http\Controllers\Api\UploadController;
 use App\Http\Controllers\Api\ConfigController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PedidoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,7 @@ Route::get('/categorias', [CategoriaController::class, 'index']);
 Route::get('/productos', [ProductoController::class, 'index']);
 Route::get('/banners', [BannerController::class, 'index']);
 Route::get('/configs', [ConfigController::class, 'index']);
+Route::post('/pedidos', [PedidoController::class, 'store']);
 
 // Admin routes
 Route::middleware(['admin.secure'])->group(function () {
@@ -27,5 +29,6 @@ Route::middleware(['admin.secure'])->group(function () {
     Route::apiResource('admin/productos', ProductoController::class);
     Route::apiResource('admin/categorias', CategoriaController::class);
     Route::apiResource('admin/banners', BannerController::class);
+    Route::apiResource('admin/pedidos', PedidoController::class);
     Route::post('/admin/configs', [ConfigController::class, 'update']);
 });
