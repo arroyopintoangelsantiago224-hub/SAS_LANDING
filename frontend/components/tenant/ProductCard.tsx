@@ -34,13 +34,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
         
-        {/* Floating Price Tag */}
-        <div className="absolute top-2 left-2 md:top-4 md:left-4 glass px-2 py-1 md:px-3 md:py-1.5 rounded-full shadow-sm">
-          <span className="text-[10px] md:text-sm font-black tracking-tight" style={{ color: primaryColor }}>
-            ${Number(product.precio).toFixed(2)}
-          </span>
-        </div>
-
         {/* Quick Add Button Overlay (Desktop Only for better UX) */}
         <div className="hidden md:flex absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 items-center justify-center pointer-events-none">
           <button 
@@ -55,10 +48,13 @@ export default function ProductCard({ product }: ProductCardProps) {
 
       {/* Product Info */}
       <div className="p-3 md:p-6">
-        <div className="mb-1 md:mb-2">
-          <h3 className="font-bold text-gray-900 dark:text-[var(--text)] text-xs md:text-lg line-clamp-1 group-hover:text-[var(--accent)] transition-colors">
+        <div className="mb-1 md:mb-2 flex items-center justify-between gap-2">
+          <h3 className="font-bold text-gray-900 dark:text-[var(--text)] text-xs md:text-lg line-clamp-1 group-hover:text-[var(--accent)] transition-colors flex-grow">
             {product.nombre}
           </h3>
+          <span className="text-[10px] md:text-sm font-black whitespace-nowrap" style={{ color: primaryColor }}>
+            ${Number(product.precio).toLocaleString('es-CO')}
+          </span>
         </div>
         <p className="text-[var(--muted)] text-[9px] md:text-xs line-clamp-2 h-6 md:h-8 mb-3 md:mb-6 leading-tight md:leading-relaxed">
           {product.descripcion}

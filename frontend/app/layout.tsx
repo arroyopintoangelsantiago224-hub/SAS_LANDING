@@ -3,6 +3,7 @@ import './styles/globals.css';
 import { siteConfig } from '@/config/site';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Providers } from '@/components/Providers';
+import Preloader from '@/components/tenant/Preloader';
 
 export const metadata: Metadata = {
   title: siteConfig.name,
@@ -27,6 +28,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <Preloader />
             {children}
           </ThemeProvider>
         </Providers>
