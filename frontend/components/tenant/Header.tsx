@@ -146,11 +146,24 @@ export default function Header() {
                 <button 
                   className="hidden md:flex items-center space-x-2 p-1 pr-4 rounded-full bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 shadow-lg transition-all active:scale-95"
                 >
-                  <img 
-                    src={session.user.image || ''} 
-                    alt={session.user.name || ''} 
-                    className="w-8 h-8 rounded-full border border-black/5"
-                  />
+                  <div className="w-8 h-8 rounded-full border border-black/5 overflow-hidden bg-gray-100 dark:bg-white/5 flex items-center justify-center">
+                    {session.user.image ? (
+                      <img 
+                        src={session.user.image.startsWith('http') ? session.user.image : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/storage/${session.user.image}`} 
+                        alt={session.user.name || ''} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 font-bold text-xs">' + (session.user?.name?.charAt(0) || 'U') + '</div>';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-white/10">
+                        <User className="w-4 h-4 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
                   <div className="flex flex-col items-start">
                     <span className="text-[9px] font-black uppercase tracking-tight text-gray-900 dark:text-white leading-none">{session.user.name}</span>
                     <span className="text-[7px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">Administrador</span>
@@ -218,20 +231,44 @@ export default function Header() {
       )}>
         <div className="flex flex-col h-full pt-32 px-8">
           <nav className="flex flex-col space-y-8">
-            {['Catálogo', 'Nosotros', 'Contacto', 'Iniciar Sesión'].map((item, index) => (
+            {['Catálogo', 'Nosotros', 'Contacto', session?.user ? 'Mi Cuenta' : 'Iniciar Sesión'].map((item, index) => (
               <Link
                 key={item}
-                href={item === 'Catálogo' ? '/catalogo' : item === 'Iniciar Sesión' ? '/admin' : `/${item.toLowerCase()}`}
+                href={item === 'Catálogo' ? '/catalogo' : (item === 'Iniciar Sesión' || item === 'Mi Cuenta') ? '/admin' : `/${item.toLowerCase()}`}
                 onClick={() => setIsMenuOpen(false)}
                 className={cn(
-                  "text-4xl font-black text-gray-900 dark:text-white transition-all duration-500 transform",
+                  "text-4xl font-black text-gray-900 dark:text-white transition-all duration-500 transform flex items-center gap-4",
                   isMenuOpen ? "translate-x-0 opacity-100" : "translate-x-12 opacity-0"
                 )}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
+                {item === 'Mi Cuenta' && session?.user?.image && (
+                  <div className="w-10 h-10 rounded-full border border-black/5 overflow-hidden">
+                    <img 
+                      src={session.user.image.startsWith('http') ? session.user.image : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/storage/${session.user.image}`} 
+                      alt={session.user.name || ''} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 {item}
               </Link>
             ))}
+            {session?.user && (
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  signOut();
+                }}
+                className={cn(
+                  "text-4xl font-black text-red-500 transition-all duration-500 transform text-left",
+                  isMenuOpen ? "translate-x-0 opacity-100" : "translate-x-12 opacity-0"
+                )}
+                style={{ transitionDelay: `${(['Catálogo', 'Nosotros', 'Contacto', 'Mi Cuenta'].length) * 100}ms` }}
+              >
+                Cerrar Sesión
+              </button>
+            )}
           </nav>
         </div>
       </div>

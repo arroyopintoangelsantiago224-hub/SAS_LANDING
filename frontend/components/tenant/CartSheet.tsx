@@ -2,18 +2,19 @@
 
 import { useCartStore } from '@/store/useCartStore';
 import { siteConfig } from '@/config/site';
-import { Trash2, Plus, Minus, X, Send, ShoppingBag, MapPin, CreditCard, CheckCircle, Loader2, ArrowLeft, Smartphone, User, Clock, Truck } from 'lucide-react';
+import { Trash2, Plus, Minus, X, Send, ShoppingBag, MapPin, CreditCard, CheckCircle, Loader2, ArrowLeft, Smartphone, User, Clock, Truck, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useSession, signIn } from 'next-auth/react';
+import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
 
 type Step = 'cart' | 'shipping' | 'payment' | 'confirmation' | 'success';
 
 export default function CartSheet() {
   const { data: session } = useSession();
   const { 
-    items, updateQuantity, removeItem, getTotal, clearCart, 
+    items, updateQuantity, removeItem, getTotal, clearCart, clearItems,
     isCartOpen, setCartOpen, customerData, setCustomerData, 
     paymentMethod, setPaymentMethod 
   } = useCartStore();
@@ -21,11 +22,31 @@ export default function CartSheet() {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>('cart');
   const [loading, setLoading] = useState(false);
+  const [detectingLocation, setDetectingLocation] = useState(false);
+  const [showMap, setShowMap] = useState(false);
   const [orderResponse, setOrderResponse] = useState<any>(null);
+  const [siteConfigs, setSiteConfigs] = useState<any>({});
+  const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
+
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ""
+  });
 
   useEffect(() => {
     setMounted(true);
+    loadConfigs();
   }, []);
+
+  async function loadConfigs() {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/configs`);
+      const data = await response.json();
+      setSiteConfigs(data);
+    } catch (error) {
+      console.error('Error loading site configs:', error);
+    }
+  }
 
   // Sync session data to store if empty
   useEffect(() => {
@@ -84,6 +105,7 @@ export default function CartSheet() {
 
       const data = await response.json();
       setOrderResponse(data);
+      clearItems(); // Borrar items del local storage una vez enviado el pedido
       setStep('success');
     } catch (error: any) {
       console.error('Error creating order:', error);
@@ -91,6 +113,51 @@ export default function CartSheet() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      alert('La geolocalización no es compatible con tu navegador');
+      return;
+    }
+
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+        setCustomerData({ latitud: latitude, longitud: longitude });
+        setLocationAccuracy(accuracy);
+        
+        // Si la precisión es baja (más de 100 metros), sugerir calibración
+        if (accuracy > 100) {
+          setShowMap(true);
+        }
+        
+        setDetectingLocation(false);
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        let msg = 'No se pudo obtener tu ubicación.';
+        if (error.code === 1) msg = 'Permiso de ubicación denegado.';
+        alert(msg + ' Por favor, ingrésala manualmente.');
+        setDetectingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
+  const handleMapCalibration = (newLat: number, newLng: number) => {
+    setCustomerData({ latitud: newLat, longitud: newLng });
+  };
+
+  const calculateEfficiency = (accuracy: number | null) => {
+    if (!accuracy) return 0;
+    if (accuracy <= 15) return 100;
+    if (accuracy <= 50) return 98;
+    if (accuracy <= 100) return 90;
+    if (accuracy <= 500) return 75;
+    if (accuracy <= 1000) return 50;
+    return 25;
   };
 
   const handleMarkAsPaid = async () => {
@@ -121,19 +188,22 @@ export default function CartSheet() {
   };
 
   const handleWhatsAppRedirect = () => {
-    const itemsList = items.map(item => `- ${item.cantidad}x ${item.nombre} ($${(Number(item.precio) * item.cantidad).toFixed(2)})`).join('\n');
+    if (!orderResponse) return;
+
+    const itemsList = (orderResponse.items || []).map((item: any) => 
+      `- ${item.cantidad}x ${item.nombre_producto || item.nombre} ($${(Number(item.precio_unitario || item.precio) * item.cantidad).toLocaleString('es-CO')})`
+    ).join('\n');
     
-    const message = `*Nuevo Pedido Confirmado (#${orderResponse?.id})*\n\n` +
-      `👤 *Cliente:* ${customerData.nombre}\n` +
-      `📞 *Teléfono:* ${customerData.telefono}\n` +
-      `📍 *Dirección:* ${customerData.direccion}\n` +
-      `💳 *Pago:* ${paymentMethod}\n\n` +
+    const message = `*Nuevo Pedido Confirmado (#${orderResponse.id})*\n\n` +
+      `👤 *Cliente:* ${orderResponse.nombre_cliente || customerData.nombre}\n` +
+      `📞 *Teléfono:* ${orderResponse.telefono_cliente || customerData.telefono}\n` +
+      `📍 *Dirección:* ${orderResponse.direccion_cliente || customerData.direccion}\n` +
+      `💳 *Pago:* ${orderResponse.metodo_pago || paymentMethod}\n\n` +
       `${itemsList}\n\n` +
-      `*Total: $${total.toFixed(2)}*`;
+      `*Total: $${Number(orderResponse.total).toLocaleString('es-CO')}*`;
     
     const whatsappUrl = `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
-    clearCart();
     setStep('cart');
     setCartOpen(false);
   };
@@ -261,61 +331,157 @@ export default function CartSheet() {
           )}
 
           {step === 'shipping' && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-              {!session && (
-                <div className="p-5 rounded-2xl bg-blue-500/5 border border-blue-500/10 space-y-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="p-2 bg-blue-500/10 rounded-lg">
-                      <User className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">¿Tienes cuenta?</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Inicia sesión con Google para autocompletar tus datos y seguir tu pedido.</p>
+            <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
+              {/* Bloque 1: Datos y Dirección */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center text-[10px] font-black">1</div>
+                  <h3 className="text-sm font-black uppercase tracking-widest italic">Datos y Dirección</h3>
+                </div>
+
+                <div className="space-y-4 pl-9">
+                  {!session && (
+                    <button 
+                      onClick={() => signIn('google')}
+                      className="w-full py-3 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-center justify-center space-x-2 text-[9px] font-black uppercase tracking-widest hover:bg-blue-500/10 transition-colors mb-4"
+                    >
+                      <img src="https://www.google.com/favicon.ico" className="w-3.5 h-3.5" alt="Google" />
+                      <span>Autocompletar con Google</span>
+                    </button>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Nombre Completo</label>
+                    <input 
+                      type="text"
+                      value={customerData.nombre}
+                      onChange={(e) => setCustomerData({ nombre: e.target.value })}
+                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium"
+                      placeholder="Ej. Juan Pérez"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Teléfono</label>
+                    <div className="relative">
+                      <Smartphone className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input 
+                        type="tel"
+                        value={customerData.telefono}
+                        onChange={(e) => setCustomerData({ telefono: e.target.value })}
+                        className="w-full pl-12 pr-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium"
+                        placeholder="300 123 4567"
+                      />
                     </div>
                   </div>
-                  <button 
-                    onClick={() => signIn('google')}
-                    className="w-full py-3 rounded-xl bg-white dark:bg-white/5 border border-black/5 dark:border-white/10 flex items-center justify-center space-x-2 text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-colors"
-                  >
-                    <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-                    <span>Continuar con Google</span>
-                  </button>
-                </div>
-              )}
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Nombre Completo</label>
-                  <input 
-                    type="text"
-                    value={customerData.nombre}
-                    onChange={(e) => setCustomerData({ nombre: e.target.value })}
-                    className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium"
-                    placeholder="Ej. Juan Pérez"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Teléfono de Contacto</label>
-                  <div className="relative">
-                    <Smartphone className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input 
-                      type="tel"
-                      value={customerData.telefono}
-                      onChange={(e) => setCustomerData({ telefono: e.target.value })}
-                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium"
-                      placeholder="300 123 4567"
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Dirección Escrita</label>
+                    <textarea 
+                      value={customerData.direccion}
+                      onChange={(e) => setCustomerData({ direccion: e.target.value })}
+                      rows={2}
+                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium resize-none"
+                      placeholder="Calle, Carrera, Barrio, Apto/Casa..."
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Dirección de Entrega</label>
-                  <textarea 
-                    value={customerData.direccion}
-                    onChange={(e) => setCustomerData({ direccion: e.target.value })}
-                    rows={3}
-                    className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium resize-none"
-                    placeholder="Calle, Carrera, Barrio, Apto/Casa..."
-                  />
+              </div>
+
+              {/* Bloque 2: Ubicación GPS */}
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-black flex items-center justify-center text-[10px] font-black">2</div>
+                    <h3 className="text-sm font-black uppercase tracking-widest italic">Ubicación GPS (Opcional)</h3>
+                  </div>
+                  {customerData.latitud && (
+                    <div className="flex flex-col items-end gap-2">
+                      <div className={cn(
+                        "flex items-center gap-1.5 px-3 py-1 rounded-full border animate-in zoom-in",
+                        locationAccuracy && locationAccuracy <= 100 
+                          ? "bg-green-500/10 border-green-500/20 text-green-600" 
+                          : "bg-amber-500/10 border-amber-500/20 text-amber-600"
+                      )}>
+                        {locationAccuracy && locationAccuracy <= 100 ? (
+                          <CheckCircle className="w-3 h-3" />
+                        ) : (
+                          <AlertCircle className="w-3 h-3" />
+                        )}
+                        <span className="text-[8px] font-black uppercase tracking-widest">
+                          {locationAccuracy && locationAccuracy <= 100 ? 'GPS Preciso' : 'Ubicación Estimada'}
+                        </span>
+                        <div className="h-3 w-[1px] bg-current opacity-20 mx-1" />
+                        <span className="text-[9px] font-black">{calculateEfficiency(locationAccuracy)}%</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pl-9 space-y-4">
+                  {customerData.latitud && locationAccuracy && locationAccuracy > 100 && (
+                    <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-2 animate-in slide-in-from-top-2">
+                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
+                        Parece que estás en una PC. La ubicación puede ser inexacta. **Por favor, arrastra el pin en el mapa hasta tu casa.**
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-gray-500 leading-relaxed font-medium italic">
+                    Recomendado: Vincular tu ubicación exacta para que el repartidor llegue sin errores.
+                  </p>
+                  
+                  <button 
+                    onClick={handleGetLocation}
+                    disabled={detectingLocation}
+                    className={cn(
+                      "w-full py-4 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center gap-3 group",
+                      customerData.latitud 
+                        ? "bg-green-500/5 border-green-500/20 text-green-600" 
+                        : "bg-gray-50 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-[var(--accent)] text-gray-500 hover:text-[var(--accent)]"
+                    )}
+                  >
+                    {detectingLocation ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : customerData.latitud ? (
+                      <>
+                        <MapPin className="w-5 h-5" />
+                        <span className="text-xs font-black uppercase tracking-widest">Actualizar Punto GPS</span>
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        <span className="text-xs font-black uppercase tracking-widest">Capturar mi posición</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Mapa de Calibración */}
+                  {siteConfigs.habilitar_calibracion === '1' && customerData.latitud && isLoaded && (
+                    <div className="space-y-3">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-center text-gray-400">Puedes arrastrar el pin para calibrar</p>
+                      <div className="w-full h-44 rounded-3xl overflow-hidden border border-black/5 dark:border-white/10 shadow-lg shadow-black/5">
+                        <GoogleMap
+                          mapContainerStyle={{ width: '100%', height: '100%' }}
+                          center={{ lat: customerData.latitud, lng: customerData.longitud }}
+                          zoom={17}
+                          options={{
+                            disableDefaultUI: true,
+                            zoomControl: false,
+                            styles: [{ featureType: 'all', elementType: 'labels.text.fill', color: '#333333' }]
+                          }}
+                        >
+                          <MarkerF
+                            position={{ lat: customerData.latitud, lng: customerData.longitud }}
+                            draggable={true}
+                            onDragEnd={(e) => {
+                              if (e.latLng) handleMapCalibration(e.latLng.lat(), e.latLng.lng());
+                            }}
+                          />
+                        </GoogleMap>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -395,7 +561,7 @@ export default function CartSheet() {
               </div>
 
               {/* Payment Instructions Section */}
-              {paymentMethod !== 'contraentrega' && orderResponse?.estado_pago === 'pendiente' && (
+              {(orderResponse?.metodo_pago || paymentMethod) !== 'contraentrega' && orderResponse?.estado_pago === 'pendiente' && (
                 <div className="w-full bg-gray-50 dark:bg-white/5 rounded-[32px] p-6 border border-black/5 dark:border-white/5 space-y-4">
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instrucciones de Pago</p>
                   
@@ -409,7 +575,7 @@ export default function CartSheet() {
 
                   <div className="space-y-2">
                     <p className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">
-                      Paga con {paymentMethod === 'nequi' ? 'Nequi' : 'Daviplata'}
+                      Paga con {(orderResponse?.metodo_pago || paymentMethod) === 'nequi' ? 'Nequi' : 'Daviplata'}
                     </p>
                     <p className="text-[10px] text-gray-500 leading-relaxed px-4">
                       Escanea el QR o envía al número <span className="font-bold text-gray-900 dark:text-white">{siteConfig.whatsapp}</span>. Una vez realizado, presiona el botón de abajo.
@@ -436,7 +602,7 @@ export default function CartSheet() {
                 </div>
               )}
 
-              {paymentMethod === 'contraentrega' && (
+              {(orderResponse?.metodo_pago || paymentMethod) === 'contraentrega' && (
                 <div className="w-full bg-blue-500/5 border border-blue-500/10 rounded-[32px] p-6 space-y-3">
                   <Truck className="w-8 h-8 text-blue-500 mx-auto" />
                   <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Pago Contraentrega</p>
@@ -457,7 +623,6 @@ export default function CartSheet() {
                 </button>
                 <button 
                   onClick={() => {
-                    clearCart();
                     setStep('cart');
                     setCartOpen(false);
                   }}

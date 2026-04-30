@@ -11,7 +11,9 @@ import {
   ShieldCheck,
   ChevronRight,
   Trash2,
-  Settings
+  Settings,
+  MapPin,
+  SwitchCamera
 } from 'lucide-react';
 import { fetchConfigs, adminUpdateConfigs } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -181,11 +183,64 @@ export default function ApisPage() {
             </div>
           </div>
 
-          {/* Placeholder for more APIs */}
-          <div className="p-12 bg-[var(--card2)] border-2 border-dashed border-[var(--border)] rounded-[32px] flex flex-col items-center justify-center text-center opacity-60">
-            <Settings className="w-12 h-12 text-[var(--muted2)] mb-4" />
-            <h4 className="font-black text-lg">Próximamente más integraciones</h4>
-            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted2)] mt-2">WhatsApp Business, Google Analytics, Stripe...</p>
+          {/* Google Maps API */}
+          <div className="bg-[var(--card)] border border-[var(--border)] rounded-[32px] overflow-hidden">
+            <div className="p-8 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-red-500/5 to-transparent">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+                  <MapPin className="w-6 h-6 text-red-500" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black tracking-tight">Google Maps</h3>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[var(--muted2)]">Geolocalización y Mapas</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted2)]">Habilitar Calibración</span>
+                <button 
+                  onClick={() => setConfigs({...configs, habilitar_calibracion: configs.habilitar_calibracion === '1' ? '0' : '1'})}
+                  className={cn(
+                    "w-12 h-6 rounded-full transition-all relative",
+                    configs.habilitar_calibracion === '1' ? "bg-green-500" : "bg-gray-300 dark:bg-white/10"
+                  )}
+                >
+                  <div className={cn(
+                    "absolute top-1 w-4 h-4 rounded-full bg-white transition-all",
+                    configs.habilitar_calibracion === '1' ? "right-1" : "left-1"
+                  )} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-8 space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-[var(--muted2)] ml-1">API Key</label>
+                  <div className="relative">
+                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted2)]" />
+                    <input 
+                      type="password"
+                      value={configs.google_maps_api_key || ''}
+                      onChange={(e) => setConfigs({...configs, google_maps_api_key: e.target.value})}
+                      placeholder="AIzaSy..."
+                      className="w-full bg-[var(--card2)] border border-[var(--border)] rounded-2xl py-4 pl-12 pr-4 text-sm font-medium focus:border-[var(--accent)] transition-all outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-[var(--card2)] border border-[var(--border)] rounded-2xl space-y-3">
+                <div className="flex items-center gap-2 text-[var(--info)]">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Información</span>
+                </div>
+                <p className="text-xs text-[var(--muted)] leading-relaxed font-medium">
+                  Esta clave permite mostrar el mapa de calibración en el carrito. Al activarla, el archivo 
+                  <code className="mx-1 px-1.5 py-0.5 bg-[var(--border)] rounded text-[var(--accent)]">.env.local</code> 
+                  se actualizará automáticamente con <code className="text-[var(--accent)]">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

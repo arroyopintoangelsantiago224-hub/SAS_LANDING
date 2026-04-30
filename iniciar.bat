@@ -36,15 +36,15 @@ echo   [+] Iniciando servicios...
 echo.
 
 :: Iniciar Backend (Laravel)
-echo   [1/2] Levantando API Backend (Laravel) en puerto 8000...
-start "Backend (API)" /min cmd /c "cd backend && php artisan serve --port=8000"
+echo   [1/2] Levantando API Backend (Laravel) en puerto 8000 (Red Local)...
+start "Backend (API)" /min cmd /c "cd backend && php artisan serve --host=0.0.0.0 --port=8000"
 
 :: Pequeña pausa para asegurar que el puerto se libere
 timeout /t 2 /nobreak > nul
 
 :: Iniciar Frontend (Next.js)
-echo   [2/2] Levantando UI Frontend (Next.js) en puerto 3000...
-start "Frontend (Next.js)" /min cmd /c "cd frontend && npm run dev"
+echo   [2/2] Levantando UI Frontend (Next.js) en puerto 3000 (Red Local)...
+start "Frontend (Next.js)" /min cmd /c "cd frontend && npx next dev -H 0.0.0.0"
 
 echo.
 echo   ================================================================

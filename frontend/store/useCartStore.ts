@@ -23,6 +23,7 @@ interface CartStore {
   removeItem: (id: number) => void;
   updateQuantity: (id: number, quantity: number) => void;
   clearCart: () => void;
+  clearItems: () => void;
   getTotal: () => number;
   getItemCount: () => number;
   isCartOpen: boolean;
@@ -73,7 +74,8 @@ export const useCartStore = create<CartStore>()(
           ),
         });
       },
-      clearCart: () => set({ items: [], customerData: { nombre: '', telefono: '', direccion: '' }, paymentMethod: '' }),
+      clearCart: () => set({ items: [], customerData: { nombre: '', telefono: '', direccion: '', latitud: undefined, longitud: undefined }, paymentMethod: '' }),
+      clearItems: () => set({ items: [] }),
       getTotal: () => {
         return get().items.reduce(
           (total, item) => total + Number(item.precio) * item.cantidad,
@@ -87,6 +89,8 @@ export const useCartStore = create<CartStore>()(
         nombre: '',
         telefono: '',
         direccion: '',
+        latitud: undefined,
+        longitud: undefined,
       },
       setCustomerData: (data) => set((state) => ({
         customerData: { ...state.customerData, ...data }

@@ -71,6 +71,15 @@ export default function PedidosPage() {
     }
   }
 
+  const openMap = (order: any) => {
+    if (order.latitud && order.longitud) {
+      window.open(`https://www.google.com/maps?q=${order.latitud},${order.longitud}`, '_blank');
+    } else {
+      const query = encodeURIComponent(`${order.direccion_cliente}, Cúcuta`);
+      window.open(`https://www.google.com/maps?q=${query}`, '_blank');
+    }
+  };
+
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -267,7 +276,10 @@ export default function PedidosPage() {
                     <Smartphone className="w-3.5 h-3.5" />
                     WhatsApp
                   </button>
-                  <button className="flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/20 transition-all">
+                  <button 
+                    onClick={() => openMap(selectedOrder)}
+                    className="flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest hover:bg-blue-500/20 transition-all"
+                  >
                     <MapPin className="w-3.5 h-3.5" />
                     Ver Mapa
                   </button>

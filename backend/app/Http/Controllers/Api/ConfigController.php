@@ -33,6 +33,7 @@ class ConfigController extends Controller
         $mapping = [
             'google_client_id' => 'GOOGLE_CLIENT_ID',
             'google_client_secret' => 'GOOGLE_CLIENT_SECRET',
+            'google_maps_api_key' => 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
         ];
 
         if (isset($mapping[$key])) {

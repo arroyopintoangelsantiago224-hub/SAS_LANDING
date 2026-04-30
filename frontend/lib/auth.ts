@@ -23,6 +23,8 @@ export const authOptions = {
         const data = await response.json();
         if (data.user) {
           (user as any).rol = data.user.rol;
+          (user as any).id = data.user.id;
+          if (data.user.avatar_url) (user as any).image = data.user.avatar_url;
         }
         return true;
       } catch (error) {
@@ -30,15 +32,19 @@ export const authOptions = {
         return true;
       }
     },
-    async jwt({ token, user }: any) {
+    async jwt({ token, user, account }: any) {
       if (user) {
         token.rol = (user as any).rol;
+        token.id = (user as any).id;
+        token.picture = user.image;
       }
       return token;
     },
     async session({ session, token }: any) {
       if (session.user) {
         (session.user as any).rol = token.rol;
+        (session.user as any).id = token.id;
+        session.user.image = token.picture;
       }
       return session;
     },
