@@ -21,7 +21,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <div className="group relative bg-white dark:bg-[var(--card)] rounded-[var(--radius2)] border border-[var(--border)] overflow-hidden hover:shadow-2xl hover:shadow-[var(--accent)]/10 transition-all duration-500 md:hover:-translate-y-1">
       {/* Product Image Container */}
-      <div className="relative aspect-[1/1.1] md:aspect-[4/5] overflow-hidden bg-[var(--card2)]">
+      <div className="relative aspect-[1/1.1] md:aspect-[4/4.5] overflow-hidden bg-[var(--card2)]">
         {product.imagen_url ? (
           <img 
             src={product.imagen_url} 
@@ -47,7 +47,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="p-3 md:p-6">
+      <div className="p-3 md:p-4">
         <div className="mb-1 md:mb-2 flex items-center justify-between gap-2">
           <h3 className="font-bold text-gray-900 dark:text-[var(--text)] text-xs md:text-lg line-clamp-1 group-hover:text-[var(--accent)] transition-colors flex-grow">
             {product.nombre}
@@ -56,7 +56,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             ${Number(product.precio).toLocaleString('es-CO')}
           </span>
         </div>
-        <p className="text-[var(--muted)] text-[9px] md:text-xs line-clamp-2 h-6 md:h-8 mb-3 md:mb-6 leading-tight md:leading-relaxed">
+        <p className="text-[var(--muted)] text-[9px] md:text-xs line-clamp-2 h-6 md:h-8 mb-3 md:mb-4 leading-tight md:leading-relaxed">
           {product.descripcion}
         </p>
         

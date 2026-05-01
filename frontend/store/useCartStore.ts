@@ -51,12 +51,10 @@ export const useCartStore = create<CartStore>()(
                 ? { ...item, cantidad: item.cantidad + 1 }
                 : item
             ),
-            isCartOpen: true,
           });
         } else {
           set({ 
-            items: [...currentItems, { ...product, cantidad: 1 }],
-            isCartOpen: true 
+            items: [...currentItems, { ...product, cantidad: 1 }]
           });
         }
       },
