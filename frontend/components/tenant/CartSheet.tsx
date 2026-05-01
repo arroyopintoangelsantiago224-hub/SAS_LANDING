@@ -26,6 +26,7 @@ export default function CartSheet() {
   const [showMap, setShowMap] = useState(false);
   const [orderResponse, setOrderResponse] = useState<any>(null);
   const [siteConfigs, setSiteConfigs] = useState<any>({});
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
 
   const { isLoaded } = useJsApiLoader({
@@ -43,6 +44,10 @@ export default function CartSheet() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/configs`);
       const data = await response.json();
       setSiteConfigs(data);
+
+      const payRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/metodos-pago`);
+      const payData = await payRes.json();
+      setPaymentMethods(payData.filter((m: any) => m.activo));
     } catch (error) {
       console.error('Error loading site configs:', error);
     }
@@ -423,7 +428,7 @@ export default function CartSheet() {
                     <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-2 animate-in slide-in-from-top-2">
                       <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                       <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
-                        Parece que estás en una PC. La ubicación puede ser inexacta. **Por favor, arrastra el pin en el mapa hasta tu casa.**
+                        Ubicación poco precisa. **Por favor, intenta capturarla nuevamente para mejorar la exactitud.**
                       </p>
                     </div>
                   )}
@@ -459,7 +464,7 @@ export default function CartSheet() {
                   {/* Mapa de Calibración */}
                   {siteConfigs.habilitar_calibracion === '1' && customerData.latitud && isLoaded && (
                     <div className="space-y-3">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-center text-gray-400">Puedes arrastrar el pin para calibrar</p>
+                      <p className="text-[9px] font-black uppercase tracking-widest text-center text-gray-400">Mapa de referencia</p>
                       <div className="w-full h-44 rounded-3xl overflow-hidden border border-black/5 dark:border-white/10 shadow-lg shadow-black/5">
                         <GoogleMap
                           mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -492,38 +497,49 @@ export default function CartSheet() {
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Selecciona método de pago</p>
                 
-                {[
-                  { id: 'nequi', name: 'Nequi / QR', icon: <Smartphone className="w-5 h-5" /> },
-                  { id: 'daviplata', name: 'Daviplata', icon: <Smartphone className="w-5 h-5" /> },
-                  { id: 'contraentrega', name: 'Contraentrega', icon: <ShoppingBag className="w-5 h-5" /> },
-                ].map((method) => (
+                {paymentMethods.map((method) => (
                   <button
                     key={method.id}
-                    onClick={() => setPaymentMethod(method.id)}
+                    onClick={() => setPaymentMethod(method.nombre)}
                     className={cn(
                       "w-full p-5 rounded-2xl border transition-all flex items-center justify-between group",
-                      paymentMethod === method.id 
+                      paymentMethod === method.nombre 
                         ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xl scale-[1.02]" 
                         : "bg-gray-50 dark:bg-white/5 border-transparent hover:border-black/10 dark:hover:border-white/10"
                     )}
                   >
                     <div className="flex items-center space-x-4">
                       <div className={cn(
-                        "p-2 rounded-lg transition-colors",
-                        paymentMethod === method.id ? "bg-white/20" : "bg-gray-200 dark:bg-white/10"
+                        "w-10 h-10 p-2 rounded-lg transition-colors flex items-center justify-center overflow-hidden",
+                        paymentMethod === method.nombre ? "bg-white/20" : "bg-gray-200 dark:bg-white/10"
                       )}>
-                        {method.icon}
+                        {method.icono ? (
+                          <img src={method.icono} alt={method.nombre} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                        ) : (
+                          <CreditCard className="w-5 h-5" />
+                        )}
                       </div>
-                      <span className="font-bold text-sm">{method.name}</span>
+                      <div className="text-left">
+                        <span className="font-bold text-sm block leading-none">{method.nombre}</span>
+                        <span className={cn(
+                          "text-[8px] font-black uppercase tracking-tighter",
+                          paymentMethod === method.nombre ? "text-white/60" : "text-[var(--muted)]"
+                        )}>
+                          {method.tipo}
+                        </span>
+                      </div>
                     </div>
                     <div className={cn(
                       "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-                      paymentMethod === method.id ? "border-white dark:border-black bg-white dark:bg-black" : "border-gray-300 dark:border-gray-600"
+                      paymentMethod === method.nombre ? "border-white dark:border-black bg-white dark:bg-black" : "border-gray-300 dark:border-gray-600"
                     )}>
-                      {paymentMethod === method.id && <div className="w-2 h-2 rounded-full bg-black dark:bg-white" />}
+                      {paymentMethod === method.nombre && <div className="w-2 h-2 rounded-full bg-black dark:bg-white" />}
                     </div>
                   </button>
                 ))}
+                {paymentMethods.length === 0 && (
+                  <p className="text-[10px] text-[var(--muted)] italic text-center">No hay métodos de pago configurados</p>
+                )}
               </div>
 
               {paymentMethod && (
@@ -561,36 +577,63 @@ export default function CartSheet() {
               </div>
 
               {/* Payment Instructions Section */}
-              {(orderResponse?.metodo_pago || paymentMethod) !== 'contraentrega' && orderResponse?.estado_pago === 'pendiente' && (
-                <div className="w-full bg-gray-50 dark:bg-white/5 rounded-[32px] p-6 border border-black/5 dark:border-white/5 space-y-4">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instrucciones de Pago</p>
-                  
-                  <div className="aspect-square w-32 mx-auto bg-white p-2 rounded-2xl shadow-sm border border-black/5">
-                    {/* Placeholder for QR */}
-                    <div className="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center relative overflow-hidden">
-                      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle,black_1px,transparent_1px)] bg-[size:4px_4px]" />
-                      <Smartphone className="w-8 h-8 text-gray-300" />
+              {(() => {
+                const selectedMethod = paymentMethods.find(m => m.nombre === (orderResponse?.metodo_pago || paymentMethod));
+                if (!selectedMethod || selectedMethod.tipo === 'contraentrega' || orderResponse?.estado_pago !== 'pendiente') return null;
+
+                const config = selectedMethod.configuracion_campos || {};
+
+                return (
+                  <div className="w-full bg-gray-50 dark:bg-white/5 rounded-[32px] p-6 border border-black/5 dark:border-white/5 space-y-4">
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-white p-1 flex items-center justify-center border border-black/5">
+                        <img src={selectedMethod.icono} alt={selectedMethod.nombre} className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                      </div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instrucciones de Pago</p>
                     </div>
-                  </div>
+                    
+                    {config.qr_imagen && selectedMethod.qr_imagen && (
+                      <div className="aspect-square w-32 mx-auto bg-white p-2 rounded-2xl shadow-sm border border-black/5">
+                        <img src={selectedMethod.qr_imagen} alt="QR" className="w-full h-full object-contain" />
+                      </div>
+                    )}
 
-                  <div className="space-y-2">
-                    <p className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">
-                      Paga con {(orderResponse?.metodo_pago || paymentMethod) === 'nequi' ? 'Nequi' : 'Daviplata'}
-                    </p>
-                    <p className="text-[10px] text-gray-500 leading-relaxed px-4">
-                      Escanea el QR o envía al número <span className="font-bold text-gray-900 dark:text-white">{siteConfig.whatsapp}</span>. Una vez realizado, presiona el botón de abajo.
-                    </p>
-                  </div>
+                    <div className="space-y-2 text-center">
+                      <p className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                        Pagar con {selectedMethod.nombre}
+                      </p>
+                      <div className="space-y-1">
+                        {config.telefono && selectedMethod.telefono && (
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">Cel: {selectedMethod.telefono}</p>
+                        )}
+                        {config.banco && selectedMethod.banco && (
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">Banco: {selectedMethod.banco}</p>
+                        )}
+                        {config.numero_cuenta && selectedMethod.numero_cuenta && (
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">Cuenta: {selectedMethod.numero_cuenta} ({selectedMethod.tipo_cuenta})</p>
+                        )}
+                        {config.titular && selectedMethod.titular && (
+                          <p className="text-xs font-medium text-[var(--muted)]">Titular: {selectedMethod.titular}</p>
+                        )}
+                      </div>
+                      
+                      {config.instrucciones && selectedMethod.instrucciones && (
+                        <p className="text-[10px] text-gray-500 leading-relaxed px-4 italic mt-2">
+                          {selectedMethod.instrucciones}
+                        </p>
+                      )}
+                    </div>
 
-                  <button 
-                    disabled={loading}
-                    onClick={handleMarkAsPaid}
-                    className="w-full py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Ya pagué'}
-                  </button>
-                </div>
-              )}
+                    <button 
+                      disabled={loading}
+                      onClick={handleMarkAsPaid}
+                      className="w-full py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Ya pagué'}
+                    </button>
+                  </div>
+                );
+              })()}
 
               {orderResponse?.estado_pago === 'por_verificar' && (
                 <div className="w-full bg-orange-500/5 border border-orange-500/10 rounded-[32px] p-6 space-y-3">
@@ -602,15 +645,21 @@ export default function CartSheet() {
                 </div>
               )}
 
-              {(orderResponse?.metodo_pago || paymentMethod) === 'contraentrega' && (
-                <div className="w-full bg-blue-500/5 border border-blue-500/10 rounded-[32px] p-6 space-y-3">
-                  <Truck className="w-8 h-8 text-blue-500 mx-auto" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Pago Contraentrega</p>
-                  <p className="text-xs text-gray-500 leading-relaxed">
-                    Prepara el efectivo para cuando llegue tu pedido.
-                  </p>
-                </div>
-              )}
+              {(() => {
+                const selectedMethod = paymentMethods.find(m => m.nombre === (orderResponse?.metodo_pago || paymentMethod));
+                if (selectedMethod?.tipo === 'contraentrega') {
+                  return (
+                    <div className="w-full bg-blue-500/5 border border-blue-500/10 rounded-[32px] p-6 space-y-3">
+                      <Truck className="w-8 h-8 text-blue-500 mx-auto" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Pago Contraentrega</p>
+                      <p className="text-xs text-gray-500 leading-relaxed text-center">
+                        Prepara el efectivo para cuando llegue tu pedido. {selectedMethod.instrucciones}
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               
               <div className="w-full space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">¿Dudas o soporte?</p>

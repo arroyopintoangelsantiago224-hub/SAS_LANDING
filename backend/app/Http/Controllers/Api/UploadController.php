@@ -14,7 +14,7 @@ class UploadController extends Controller
     {
         $request->validate([
             'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'type' => 'required|string|in:items,banners,site',
+            'type' => 'required|string|in:items,banners,site,pagos',
             'id' => 'nullable|string'
         ]);
 
@@ -29,8 +29,9 @@ class UploadController extends Controller
             // Read image
             $img = $manager->read($image);
             
-            // Generate unique filename with webp extension
-            $filename = uniqid() . '.webp';
+            // Generate descriptive filename with webp extension
+            $originalName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
+            $filename = \Illuminate\Support\Str::slug($originalName) . '-' . uniqid() . '.webp';
             
             // Encode as webp
             $encoded = $img->toWebp(80);

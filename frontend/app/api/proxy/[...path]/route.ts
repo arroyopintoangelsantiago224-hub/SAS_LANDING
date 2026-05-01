@@ -34,7 +34,7 @@ async function handleProxy(req: Request, params: { path: string[] }, method: str
   headers.set('Accept', 'application/json');
   
   const contentType = req.headers.get('content-type');
-  if (contentType && !contentType.includes('multipart/form-data')) {
+  if (contentType) {
     headers.set('Content-Type', contentType);
   }
 

@@ -26,8 +26,14 @@ export async function fetchConfigs() {
   return res.json();
 }
 
+export async function fetchPaymentMethods() {
+  const res = await fetch(`${API_URL}/metodos-pago`, { headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('Failed to fetch payment methods');
+  return res.json();
+}
+
 // Admin functions
-export async function uploadImage(file: File, type: 'items' | 'banners' | 'site', id?: number | string) {
+export async function uploadImage(file: File, type: 'items' | 'banners' | 'site' | 'pagos', id?: number | string) {
   const formData = new FormData();
   formData.append('image', file);
   formData.append('type', type);
@@ -153,4 +159,31 @@ export async function adminUpdateOrder(id: number, data: any) {
     throw new Error(err.message || 'Failed to update order');
   }
   return res.json();
+}
+
+// Payment Methods Admin
+export async function adminFetchPaymentMethods() {
+  const res = await fetch(`/api/proxy/admin/metodos-pago?admin=true`, { headers: { 'Accept': 'application/json' } });
+  return res.json();
+}
+
+export async function adminSavePaymentMethod(method: any) {
+  const verb = method.id ? 'PUT' : 'POST';
+  const url = method.id ? `/api/proxy/admin/metodos-pago/${method.id}` : `/api/proxy/admin/metodos-pago`;
+  const res = await fetch(url, {
+    method: verb,
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(method),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to save payment method');
+  }
+  return res.json();
+}
+
+export async function adminDeletePaymentMethod(id: number) {
+  const res = await fetch(`/api/proxy/admin/metodos-pago/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+  if (!res.ok) throw new Error('Failed to delete payment method');
+  return true;
 }

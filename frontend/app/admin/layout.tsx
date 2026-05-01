@@ -15,7 +15,8 @@ import {
   Moon,
   Sun,
   Activity,
-  ShoppingBag
+  ShoppingBag,
+  CreditCard
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
@@ -38,6 +39,7 @@ export default function AdminLayout({
     { name: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
     { name: 'Pedidos', icon: ShoppingBag, href: '/admin/pedidos' },
     { name: 'Ítems', icon: Package, href: '/admin/items' },
+    { name: 'Pagos', icon: CreditCard, href: '/admin/pagos' },
     { name: 'Mis APIs', icon: Activity, href: '/admin/apis' },
     { name: 'Personalizar', icon: Palette, href: '/admin/personalizar' },
     { name: 'Ajustes', icon: Settings, href: '/admin/ajustes' },
