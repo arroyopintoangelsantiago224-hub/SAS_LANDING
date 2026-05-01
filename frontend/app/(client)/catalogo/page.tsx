@@ -13,18 +13,11 @@ export default function CatalogoPage() {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const primaryColor = siteConfig.colors.primary === '#000000' ? '#E8A030' : siteConfig.colors.primary;
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 400);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+
 
   useEffect(() => {
     async function loadInitialData() {
@@ -81,13 +74,7 @@ export default function CatalogoPage() {
           </div>
         </div>
 
-        {/* Categorías Modernas y Buscador (Sticky Refined) */}
-        <div className={cn(
-          "sticky top-24 z-40 p-4 md:p-5 mb-8 md:mb-12 transition-all duration-500 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4",
-          isScrolled
-            ? "bg-white/80 dark:bg-[#0A0A0C]/80 backdrop-blur-xl border border-black/5 dark:border-white/5 shadow-2xl rounded-[32px] mx-0"
-            : "bg-transparent rounded-none mx-0"
-        )}>
+        <div className="p-4 md:p-5 mb-8 md:mb-12 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-transparent rounded-none mx-0">
           <div className="overflow-x-auto no-scrollbar flex items-center space-x-3 md:space-x-4">
             <button
               onClick={() => setActiveCategoryId('Todos')}

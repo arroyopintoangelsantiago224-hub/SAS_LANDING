@@ -84,9 +84,11 @@ export default function Header() {
               )}>
                 {siteName}
               </span>
-              <span className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-black text-gray-500 dark:text-gray-400 leading-tight mt-1">
-                {configs.site_description || 'Premium Store'}
-              </span>
+              {configs.site_description && (
+                <span className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-black text-gray-500 dark:text-gray-400 leading-tight mt-1">
+                  {configs.site_description}
+                </span>
+              )}
             </div>
           </Link>
 
