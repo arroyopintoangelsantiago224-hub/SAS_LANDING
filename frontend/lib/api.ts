@@ -1,27 +1,31 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const COMMON_HEADERS = {
+  'Accept': 'application/json',
+  'ngrok-skip-browser-warning': 'true'
+};
 
 // Public functions
 export async function fetchCategories() {
-  const res = await fetch(`${API_URL}/categorias`, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`${API_URL}/categorias`, { headers: COMMON_HEADERS });
   if (!res.ok) throw new Error('Failed to fetch categories');
   return res.json();
 }
 
 export async function fetchProducts(categoryId?: number | string) {
   const url = categoryId && categoryId !== 'Todos' ? `${API_URL}/productos?categoria_id=${categoryId}` : `${API_URL}/productos`;
-  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(url, { headers: COMMON_HEADERS });
   if (!res.ok) throw new Error('Failed to fetch products');
   return res.json();
 }
 
 export async function fetchBanners() {
-  const res = await fetch(`${API_URL}/banners`, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`${API_URL}/banners`, { headers: COMMON_HEADERS });
   if (!res.ok) throw new Error('Failed to fetch banners');
   return res.json();
 }
 
 export async function fetchConfigs() {
-  const res = await fetch(`${API_URL}/configs`, { headers: { 'Accept': 'application/json' } });
+  const res = await fetch(`${API_URL}/configs`, { headers: COMMON_HEADERS });
   if (!res.ok) throw new Error('Failed to fetch configs');
   return res.json();
 }

@@ -41,11 +41,15 @@ export default function CartSheet() {
 
   async function loadConfigs() {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/configs`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/configs`, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       const data = await response.json();
       setSiteConfigs(data);
 
-      const payRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/metodos-pago`);
+      const payRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/metodos-pago`, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
       const payData = await payRes.json();
       setPaymentMethods(payData.filter((m: any) => m.activo));
     } catch (error) {
@@ -99,6 +103,7 @@ export default function CartSheet() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify(orderData),
       });
@@ -173,6 +178,7 @@ export default function CartSheet() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
         },
         body: JSON.stringify({
           estado_pago: 'por_verificar'
