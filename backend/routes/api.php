@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\ConfigController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PedidoController;
 use App\Http\Controllers\Api\MetodoPagoController;
+use App\Http\Controllers\Api\NotificacionSonidoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -23,6 +24,7 @@ Route::get('/productos', [ProductoController::class, 'index']);
 Route::get('/banners', [BannerController::class, 'index']);
 Route::get('/configs', [ConfigController::class, 'index']);
 Route::get('/metodos-pago', [MetodoPagoController::class, 'index']);
+Route::get('/sonido-activo', [NotificacionSonidoController::class, 'getActive']);
 Route::post('/pedidos', [PedidoController::class, 'store']);
 
 // Admin routes
@@ -33,5 +35,17 @@ Route::middleware(['admin.secure'])->group(function () {
     Route::apiResource('admin/banners', BannerController::class);
     Route::apiResource('admin/pedidos', PedidoController::class);
     Route::apiResource('admin/metodos-pago', MetodoPagoController::class);
+    Route::apiResource('admin/sonidos', NotificacionSonidoController::class);
     Route::post('/admin/configs', [ConfigController::class, 'update']);
 });
+// CORS-safe storage access for audio/images
+Route::get('/storage-safe/{path}', function($path) {
+    $filePath = storage_path('app/public/' . $path);
+    if (!file_exists($filePath)) abort(404);
+    
+    return response()->file($filePath, [
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET',
+        'Access-Control-Allow-Headers' => '*',
+    ]);
+})->where('path', '.*');

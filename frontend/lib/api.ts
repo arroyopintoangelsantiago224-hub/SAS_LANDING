@@ -191,3 +191,30 @@ export async function adminDeletePaymentMethod(id: number) {
   if (!res.ok) throw new Error('Failed to delete payment method');
   return true;
 }
+// Sound functions
+export async function fetchActiveSound() {
+  const res = await fetch(`${API_URL?.replace('/api', '')}/api/sonido-activo`, { headers: COMMON_HEADERS });
+  if (!res.ok) return null;
+  return res.json();
+}
+
+export async function adminFetchSounds() {
+  const res = await fetch(`/api/proxy/admin/sonidos?admin=true`, { headers: { 'Accept': 'application/json' } });
+  return res.json();
+}
+
+export async function adminSaveSound(sound: any) {
+  const method = sound.id ? 'PUT' : 'POST';
+  const url = sound.id ? `/api/proxy/admin/sonidos/${sound.id}` : `/api/proxy/admin/sonidos`;
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(sound),
+  });
+  return res.json();
+}
+
+export async function adminDeleteSound(id: number) {
+  const res = await fetch(`/api/proxy/admin/sonidos/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+  return res.json();
+}

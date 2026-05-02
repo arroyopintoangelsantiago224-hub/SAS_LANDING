@@ -83,6 +83,13 @@ class PedidoController extends Controller
 
             DB::commit();
 
+            // Broadcast the event (wrapped in try-catch so it doesn't block the order if Reverb is down)
+            try {
+                broadcast(new \App\Events\OrderCreated($pedido->load('items')))->toOthers();
+            } catch (\Exception $e) {
+                \Log::warning('Broadcast failed: ' . $e->getMessage());
+            }
+
             return response()->json($pedido->load('items'), 201);
         } catch (\Exception $e) {
             DB::rollBack();

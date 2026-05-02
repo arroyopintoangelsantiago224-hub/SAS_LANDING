@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { adminFetchOrders, adminUpdateOrder } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { useOrderStore } from '@/store/useOrderStore';
 
 const statusColors: any = {
   pendiente: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
@@ -35,34 +36,29 @@ const paymentStatusColors: any = {
 };
 
 export default function PedidosPage() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const orders = useOrderStore((state) => state.orders);
+  const loadOrders = useOrderStore((state) => state.loadOrders);
+  const updateOrderInStore = useOrderStore((state) => state.updateOrder);
+  
+  const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [updating, setUpdating] = useState<number | null>(null);
 
   useEffect(() => {
-    loadOrders();
-  }, []);
-
-  async function loadOrders() {
-    setLoading(true);
-    try {
-      const data = await adminFetchOrders();
-      setOrders(data);
-    } catch (error) {
-      console.error('Error loading orders:', error);
-    } finally {
-      setLoading(false);
+    // Check if orders are already loaded, if not load them
+    if (orders.length === 0) {
+      setLoading(true);
+      loadOrders().finally(() => setLoading(false));
     }
-  }
+  }, []);
 
   async function handleStatusChange(orderId: number, field: string, value: string) {
     setUpdating(orderId);
     try {
-      await adminUpdateOrder(orderId, { [field]: value });
-      setOrders(orders.map(o => o.id === orderId ? { ...o, [field]: value } : o));
+      const updatedOrder = await adminUpdateOrder(orderId, { [field]: value });
+      updateOrderInStore(updatedOrder);
       if (selectedOrder?.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, [field]: value });
+        setSelectedOrder(updatedOrder);
       }
     } catch (error) {
       console.error('Error updating order:', error);

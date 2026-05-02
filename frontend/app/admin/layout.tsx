@@ -16,10 +16,14 @@ import {
   Sun,
   Activity,
   ShoppingBag,
-  CreditCard
+  CreditCard,
+  Bell
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
+import { useOrderStore } from '@/store/useOrderStore';
+import SocketHandler from '@/components/SocketHandler';
+import { Toaster } from 'sonner';
 
 export default function AdminLayout({
   children,
@@ -29,10 +33,13 @@ export default function AdminLayout({
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const pendingCount = useOrderStore((state) => state.pendingCount);
+  const loadOrders = useOrderStore((state) => state.loadOrders);
 
   // Wait until mounted to avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
+    loadOrders();
   }, []);
 
   const menuItems = [
@@ -40,6 +47,7 @@ export default function AdminLayout({
     { name: 'Pedidos', icon: ShoppingBag, href: '/admin/pedidos' },
     { name: 'Ítems', icon: Package, href: '/admin/items' },
     { name: 'Pagos', icon: CreditCard, href: '/admin/pagos' },
+    { name: 'Notificaciones', icon: Bell, href: '/admin/notificaciones' },
     { name: 'Mis APIs', icon: Activity, href: '/admin/apis' },
     { name: 'Personalizar', icon: Palette, href: '/admin/personalizar' },
     { name: 'Ajustes', icon: Settings, href: '/admin/ajustes' },
@@ -77,6 +85,14 @@ export default function AdminLayout({
                   <div className="flex items-center gap-3">
                     <item.icon className={cn("w-4 h-4", isActive ? "text-black" : "text-[var(--muted2)] group-hover:text-[var(--accent)]")} />
                     {item.name}
+                    {item.name === 'Pedidos' && pendingCount > 0 && (
+                      <span className={cn(
+                        "ml-2 px-2 py-0.5 rounded-full text-[9px] font-black tracking-widest",
+                        isActive ? "bg-black text-[var(--accent)]" : "bg-[var(--accent)] text-black"
+                      )}>
+                        {pendingCount}
+                      </span>
+                    )}
                   </div>
                   {isActive && <ChevronRight className="w-4 h-4" />}
                 </Link>
@@ -133,6 +149,8 @@ export default function AdminLayout({
           <Menu className="w-5 h-5" />
         </button>
       </div>
+      <SocketHandler />
+      <Toaster richColors position="top-right" />
     </div>
   );
 }

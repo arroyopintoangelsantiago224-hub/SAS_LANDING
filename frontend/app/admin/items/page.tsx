@@ -131,7 +131,7 @@ export default function AdminItemsPage() {
       const saved = await adminSaveProduct(productData);
       if (selectedFile) {
         const uploadRes = await uploadImage(selectedFile, 'items', saved.id);
-        await adminSaveProduct({ ...saved, imagen_url: uploadRes.url });
+        await adminSaveProduct({ ...saved, imagen_url: uploadRes.path });
       }
       loadData();
       closeModals();
@@ -162,7 +162,7 @@ export default function AdminItemsPage() {
       const saved = await adminSaveCategory(categoryData);
       if (selectedFile) {
         const uploadRes = await uploadImage(selectedFile, 'items', `cat_${saved.id}`);
-        await adminSaveCategory({ ...saved, imagen_url: uploadRes.url });
+        await adminSaveCategory({ ...saved, imagen_url: uploadRes.path });
       }
       loadData();
       closeModals();

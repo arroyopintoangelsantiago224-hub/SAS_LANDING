@@ -13,8 +13,8 @@ class UploadController extends Controller
     public function upload(Request $request)
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            'type' => 'required|string|in:items,banners,site,pagos',
+            'image' => 'required|file|mimes:jpeg,png,jpg,gif,webp,mp3,wav,ogg,webm,mpeg|max:5120', // Max 5MB
+            'type' => 'required|string|in:items,banners,site,pagos,sounds',
             'id' => 'nullable|string'
         ]);
 
@@ -23,31 +23,29 @@ class UploadController extends Controller
             $type = $request->type;
             $id = $request->id ?? 'general';
             
-            // Create manager with driver
-            $manager = new ImageManager(new Driver());
-            
-            // Read image
-            $img = $manager->read($image);
-            
-            // Generate descriptive filename with webp extension
+            $isImage = str_starts_with($image->getMimeType(), 'image/');
             $originalName = pathinfo($image->getClientOriginalName(), PATHINFO_FILENAME);
-            $filename = \Illuminate\Support\Str::slug($originalName) . '-' . uniqid() . '.webp';
-            
-            // Encode as webp
-            $encoded = $img->toWebp(80);
-            
-            // Define path: uploads/{type}/{id}/{filename}
+            $extension = $isImage ? 'webp' : $image->getClientOriginalExtension();
+            $filename = \Illuminate\Support\Str::slug($originalName) . '-' . uniqid() . '.' . $extension;
             $path = "uploads/{$type}/{$id}";
-            
-            // Store
-            Storage::disk('public')->put($path . '/' . $filename, (string) $encoded);
+
+            if ($isImage) {
+                // Create manager with driver
+                $manager = new ImageManager(new Driver());
+                $img = $manager->read($image);
+                $encoded = $img->toWebp(80);
+                Storage::disk('public')->put($path . '/' . $filename, (string) $encoded);
+            } else {
+                // Store raw file (for audio, etc.)
+                Storage::disk('public')->putFileAs($path, $image, $filename);
+            }
             
             // Get URL
             $url = asset('storage/' . $path . '/' . $filename);
             
             return response()->json([
                 'url' => $url,
-                'path' => $path . '/' . $filename,
+                'path' => 'storage/' . $path . '/' . $filename,
                 'message' => 'Imagen subida correctamente'
             ]);
         }

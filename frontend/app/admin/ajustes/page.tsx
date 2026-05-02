@@ -18,8 +18,11 @@ export default function AdminConfigPage() {
   const [success, setSuccess] = useState(false);
   
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFavicon, setSelectedFavicon] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewFaviconUrl, setPreviewFaviconUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadConfigs();
@@ -30,6 +33,7 @@ export default function AdminConfigPage() {
       const data = await fetchConfigs();
       setConfigs(data);
       if (data.site_logo) setPreviewUrl(data.site_logo);
+      if (data.site_favicon) setPreviewFaviconUrl(data.site_favicon);
     } catch (error) {
       console.error('Error loading configs:', error);
     } finally {
@@ -45,6 +49,14 @@ export default function AdminConfigPage() {
     }
   };
 
+  const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFavicon(file);
+      setPreviewFaviconUrl(URL.createObjectURL(file));
+    }
+  };
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
@@ -53,16 +65,23 @@ export default function AdminConfigPage() {
     const formData = new FormData(e.currentTarget);
     const newConfigs = {
       site_name: formData.get('site_name'),
+      site_title: formData.get('site_title'),
       site_description: formData.get('site_description'),
       whatsapp: formData.get('whatsapp'),
-      site_logo: configs.site_logo || ''
+      site_logo: configs.site_logo || '',
+      site_favicon: configs.site_favicon || ''
     };
 
     try {
       // 1. Upload logo if changed
       if (selectedFile) {
         const uploadRes = await uploadImage(selectedFile, 'site', 'logo');
-        newConfigs.site_logo = uploadRes.url;
+        newConfigs.site_logo = uploadRes.path;
+      }
+
+      if (selectedFavicon) {
+        const uploadRes = await uploadImage(selectedFavicon, 'site', 'favicon');
+        newConfigs.site_favicon = uploadRes.path;
       }
 
       // 2. Update all configs

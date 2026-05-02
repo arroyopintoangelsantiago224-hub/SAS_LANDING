@@ -4,10 +4,14 @@ import { siteConfig } from '@/config/site';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Providers } from '@/components/Providers';
 import Preloader from '@/components/tenant/Preloader';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
-  title: siteConfig.name,
-  description: siteConfig.description,
+  title: 'Dongarbanzo',
+  description: 'Tu tienda de confianza',
+  icons: {
+    icon: '/favicon.webp',
+  },
 };
 
 export default function RootLayout({
@@ -29,6 +33,7 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <Preloader />
+            <Toaster richColors position="top-right" />
             {children}
           </ThemeProvider>
         </Providers>

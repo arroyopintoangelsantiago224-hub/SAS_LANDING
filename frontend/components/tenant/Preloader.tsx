@@ -9,15 +9,60 @@ export default function Preloader() {
   const primaryColor = siteConfig.colors.primary === '#000000' ? '#E8A030' : siteConfig.colors.primary;
 
   useEffect(() => {
-    // Show for at least 1.5 seconds to make it look intentional
-    const timer = setTimeout(() => {
-      setFadeOut(true);
-      setTimeout(() => {
-        setLoading(false);
-      }, 500); // Duration of fade-out animation
-    }, 1500);
+    let isMounted = true;
+    let timerFinished = false;
+    let pageLoaded = false;
+    let imagesFinished = false;
 
-    return () => clearTimeout(timer);
+    const checkAllImagesLoaded = () => {
+      const images = Array.from(document.querySelectorAll('img'));
+      if (images.length === 0) return true;
+      return images.every(img => img.complete);
+    };
+
+    const checkAndFinish = () => {
+      if (timerFinished && pageLoaded && imagesFinished && isMounted) {
+        setFadeOut(true);
+        setTimeout(() => {
+          if (isMounted) setLoading(false);
+        }, 500);
+      }
+    };
+
+    // 1. Minimum duration timer (2 seconds for better feel)
+    const timer = setTimeout(() => {
+      timerFinished = true;
+      checkAndFinish();
+    }, 2000);
+
+    // 2. Window Load Event
+    const handleLoad = () => {
+      pageLoaded = true;
+      checkAndFinish();
+    };
+
+    if (document.readyState === 'complete') {
+      pageLoaded = true;
+    } else {
+      window.addEventListener('load', handleLoad);
+    }
+
+    // 3. Continuous Image Check (to catch images added by API calls)
+    const imageInterval = setInterval(() => {
+      if (checkAllImagesLoaded()) {
+        imagesFinished = true;
+        // If page is also loaded (or readyState complete), try to finish
+        if (document.readyState === 'complete') pageLoaded = true;
+        checkAndFinish();
+      }
+    }, 100);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('load', handleLoad);
+      clearTimeout(timer);
+      clearInterval(imageInterval);
+    };
   }, []);
 
   if (!loading) return null;

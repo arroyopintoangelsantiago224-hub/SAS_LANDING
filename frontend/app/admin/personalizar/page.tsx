@@ -123,7 +123,7 @@ export default function AdminPersonalizarPage() {
         const uploadRes = await uploadImage(selectedFile, 'banners', bannerId);
         await adminSaveBanner({
           ...savedBanner,
-          imagen_url: uploadRes.url
+          imagen_url: uploadRes.path
         });
       }
 

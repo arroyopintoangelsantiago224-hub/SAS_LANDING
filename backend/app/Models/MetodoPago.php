@@ -34,18 +34,14 @@ class MetodoPago extends Model
     public function getIconoAttribute($value)
     {
         if (!$value) return null;
-        if (str_contains($value, 'localhost') || str_contains($value, '127.0.0.1') || str_contains($value, '192.168.')) {
-            return asset(parse_url($value, PHP_URL_PATH));
-        }
-        return $value;
+        if (str_starts_with($value, 'http')) return $value;
+        return asset($value);
     }
 
     public function getQrImagenAttribute($value)
     {
         if (!$value) return null;
-        if (str_contains($value, 'localhost') || str_contains($value, '127.0.0.1') || str_contains($value, '192.168.')) {
-            return asset(parse_url($value, PHP_URL_PATH));
-        }
-        return $value;
+        if (str_starts_with($value, 'http')) return $value;
+        return asset($value);
     }
 }

@@ -123,12 +123,12 @@ export default function AdminPaymentsPage() {
 
       if (selectedFile) {
         const uploadRes = await uploadImage(selectedFile, 'pagos', editingMethod.id);
-        iconUrl = uploadRes.url;
+        iconUrl = uploadRes.path;
       }
 
       if (selectedQRFile) {
         const uploadRes = await uploadImage(selectedQRFile, 'pagos', editingMethod.id);
-        qrUrl = uploadRes.url;
+        qrUrl = uploadRes.path;
       }
 
       await adminSavePaymentMethod({

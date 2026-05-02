@@ -53,6 +53,7 @@ async function handleProxy(req: Request, params: { path: string[] }, method: str
       method,
       headers,
       body,
+      cache: 'no-store'
     });
 
     const data = await response.json().catch(() => ({}));

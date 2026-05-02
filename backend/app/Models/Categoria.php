@@ -22,4 +22,11 @@ class Categoria extends Model
     {
         return $this->hasMany(Producto::class);
     }
+
+    public function getImagenUrlAttribute($value)
+    {
+        if (!$value) return null;
+        if (str_starts_with($value, 'http')) return $value;
+        return asset($value);
+    }
 }

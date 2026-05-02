@@ -11,7 +11,16 @@ class ConfigController extends Controller
     public function index()
     {
         // Return all configs as a key-value pair
-        return response()->json(Config::pluck('value', 'key'));
+        $configs = Config::pluck('value', 'key');
+
+        // Transform image paths to full URLs if they are relative
+        foreach ($configs as $key => $value) {
+            if (in_array($key, ['site_logo', 'site_favicon']) && $value && !str_starts_with($value, 'http')) {
+                $configs[$key] = asset($value);
+            }
+        }
+
+        return response()->json($configs);
     }
 
     public function update(Request $request)
