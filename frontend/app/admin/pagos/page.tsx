@@ -20,6 +20,8 @@ import {
   Upload
 } from 'lucide-react';
 import { adminFetchPaymentMethods, adminSavePaymentMethod, adminDeletePaymentMethod, uploadImage } from '@/lib/api';
+import { ImageUpload } from '@/components/ImageUpload';
+
 
 const AVAILABLE_FIELDS = [
   { key: 'telefono', label: 'Teléfono / Celular', group: 'qr' },
@@ -259,40 +261,20 @@ export default function AdminPaymentsPage() {
               {/* Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Icono (Opcional)</label>
-                  <div className="flex items-center gap-4">
-                    <div 
-                      onClick={() => fileInputRef.current?.click()}
-                      className="relative w-20 h-20 rounded-2xl bg-[var(--card2)] border-2 border-dashed border-[var(--border2)] hover:border-[var(--accent)] transition-all cursor-pointer overflow-hidden flex items-center justify-center group"
-                    >
-                      {previewUrl ? (
-                        <img src={previewUrl} alt="Preview" className="w-full h-full object-contain p-2" />
-                      ) : (
-                        <ImageIcon className="w-8 h-8 text-[var(--muted2)]" />
-                      )}
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <Upload className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <button 
-                        onClick={() => fileInputRef.current?.click()}
-                        className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] hover:underline text-left"
-                      >
-                        {previewUrl ? 'Cambiar Imagen' : 'Subir Imagen'}
-                      </button>
-                      <p className="text-[8px] text-[var(--muted)] uppercase font-bold italic">Soporta: PNG, JPG, WEBP, SVG</p>
-                      {previewUrl && (
-                        <button 
-                          onClick={() => { setPreviewUrl(''); setSelectedFile(null); setEditingMethod({...editingMethod, icono: ''}); }}
-                          className="text-[10px] font-black uppercase tracking-widest text-[var(--error)] hover:underline text-left"
-                        >
-                          Eliminar
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/png, image/jpeg, image/webp, image/svg+xml" className="hidden" />
+                  <ImageUpload 
+                    label="Icono (Opcional)"
+                    previewUrl={previewUrl}
+                    aspectRatio="aspect-square w-20 h-20"
+                    onFileSelect={(file) => {
+                      setSelectedFile(file);
+                      setPreviewUrl(URL.createObjectURL(file));
+                    }}
+                    onRemove={() => {
+                      setPreviewUrl('');
+                      setSelectedFile(null);
+                      setEditingMethod({...editingMethod, icono: ''});
+                    }}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -411,39 +393,20 @@ export default function AdminPaymentsPage() {
 
                   {editingMethod.configuracion_campos.qr_imagen && (
                     <div className="space-y-2">
-                      <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Imagen QR</label>
-                      <div className="flex items-center gap-4">
-                        <div 
-                          onClick={() => qrInputRef.current?.click()}
-                          className="relative w-20 h-20 rounded-2xl bg-[var(--card2)] border-2 border-dashed border-[var(--border2)] hover:border-[var(--accent)] transition-all cursor-pointer overflow-hidden flex items-center justify-center group"
-                        >
-                          {previewQRUrl ? (
-                            <img src={previewQRUrl} alt="QR Preview" className="w-full h-full object-contain p-2" />
-                          ) : (
-                            <QrCode className="w-8 h-8 text-[var(--muted2)]" />
-                          )}
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Upload className="w-6 h-6 text-white" />
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <button 
-                            onClick={() => qrInputRef.current?.click()}
-                            className="text-[10px] font-black uppercase tracking-widest text-[var(--accent)] hover:underline text-left"
-                          >
-                            {previewQRUrl ? 'Cambiar QR' : 'Subir QR'}
-                          </button>
-                          {previewQRUrl && (
-                            <button 
-                              onClick={() => { setPreviewQRUrl(''); setSelectedQRFile(null); setEditingMethod({...editingMethod, qr_imagen: ''}); }}
-                              className="text-[10px] font-black uppercase tracking-widest text-[var(--error)] hover:underline text-left"
-                            >
-                              Eliminar
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <input type="file" ref={qrInputRef} onChange={handleQRFileChange} accept="image/*" className="hidden" />
+                      <ImageUpload 
+                        label="Imagen QR"
+                        previewUrl={previewQRUrl}
+                        aspectRatio="aspect-square w-24 h-24"
+                        onFileSelect={(file) => {
+                          setSelectedQRFile(file);
+                          setPreviewQRUrl(URL.createObjectURL(file));
+                        }}
+                        onRemove={() => {
+                          setPreviewQRUrl('');
+                          setSelectedQRFile(null);
+                          setEditingMethod({...editingMethod, qr_imagen: ''});
+                        }}
+                      />
                     </div>
                   )}
 

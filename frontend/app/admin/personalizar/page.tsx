@@ -18,6 +18,7 @@ import {
 import { adminFetchBanners, adminSaveBanner, adminDeleteBanner, uploadImage } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
+import { ImageUpload } from '@/components/ImageUpload';
 
 export default function AdminPersonalizarPage() {
   const [banners, setBanners] = useState<any[]>([]);
@@ -231,35 +232,15 @@ export default function AdminPersonalizarPage() {
             </div>
             <form onSubmit={handleSave} className="p-5 space-y-4 max-h-[85vh] overflow-y-auto no-scrollbar">
               {/* Image Upload Area */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Imagen</label>
-                  {previewUrl && (
-                    <button type="button" onClick={removeImage} className="text-[9px] font-bold text-[var(--danger)] flex items-center gap-1 hover:underline">
-                      <Eraser className="w-3 h-3" />
-                      Eliminar
-                    </button>
-                  )}
-                </div>
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="relative aspect-video rounded-xl border-2 border-dashed border-[var(--border2)] bg-[var(--card)] hover:border-[var(--accent)] transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center group"
-                >
-                  {previewUrl ? (
-                    <>
-                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <Upload className="w-6 h-6 text-white" />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center space-y-1">
-                      <ImageIcon className="w-5 h-5 text-[var(--muted)] mx-auto" />
-                      <p className="text-[10px] text-[var(--muted)]">Click para subir</p>
-                    </div>
-                  )}
-                </div>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
+              <ImageUpload 
+                label="Imagen"
+                previewUrl={previewUrl}
+                onFileSelect={(file) => {
+                  setSelectedFile(file);
+                  setPreviewUrl(URL.createObjectURL(file));
+                }}
+                onRemove={removeImage}
+              />
                 <input 
                   name="imagen_url" 
                   value={previewUrl.startsWith('blob:') ? '' : previewUrl}
@@ -267,7 +248,7 @@ export default function AdminPersonalizarPage() {
                   placeholder="O pega URL externa..."
                   className="w-full px-3 py-2 bg-[var(--card)] border border-[var(--border2)] rounded-lg text-xs focus:border-[var(--accent)] outline-none mt-2"
                 />
-              </div>
+
 
               <div className="space-y-1">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Título</label>

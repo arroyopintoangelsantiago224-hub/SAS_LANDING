@@ -26,6 +26,8 @@ import {
   uploadImage 
 } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { ImageUpload } from '@/components/ImageUpload';
+
 
 export default function AdminItemsPage() {
   const [activeTab, setActiveTab] = useState<'productos' | 'categorias'>('productos');
@@ -312,35 +314,16 @@ export default function AdminItemsPage() {
               </button>
             </div>
             <form onSubmit={handleSaveProduct} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto no-scrollbar">
-              <div className="space-y-1">
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Imagen del Producto</label>
-                  {previewUrl && (
-                    <button type="button" onClick={removeImage} className="text-[9px] font-bold text-[var(--danger)] flex items-center gap-1 hover:underline">
-                      <Eraser className="w-3 h-3" /> Eliminar
-                    </button>
-                  )}
-                </div>
-                <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="relative aspect-video rounded-2xl border-2 border-dashed border-[var(--border2)] bg-[var(--card)] hover:border-[var(--accent)] transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center group"
-                >
-                  {previewUrl ? (
-                    <>
-                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <Upload className="w-8 h-8 text-white" />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center space-y-2">
-                      <ImageIcon className="w-6 h-6 text-[var(--muted)] mx-auto" />
-                      <p className="text-[10px] font-bold text-[var(--muted)] uppercase tracking-widest">Click para subir</p>
-                    </div>
-                  )}
-                </div>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-              </div>
+              <ImageUpload 
+                label="Imagen del Producto"
+                previewUrl={previewUrl}
+                onFileSelect={(file) => {
+                  setSelectedFile(file);
+                  setPreviewUrl(URL.createObjectURL(file));
+                }}
+                onRemove={removeImage}
+              />
+
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
@@ -384,10 +367,20 @@ export default function AdminItemsPage() {
               </button>
             </div>
             <form onSubmit={handleSaveCategory} className="p-6 space-y-4">
+              <ImageUpload 
+                label="Imagen de Categoría (Opcional)"
+                previewUrl={previewUrl}
+                onFileSelect={(file) => {
+                  setSelectedFile(file);
+                  setPreviewUrl(URL.createObjectURL(file));
+                }}
+                onRemove={removeImage}
+              />
               <div className="space-y-1">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Nombre de Categoría</label>
                 <input name="nombre" required defaultValue={editingItem?.nombre} className="w-full px-4 py-2.5 bg-[var(--card)] border border-[var(--border2)] rounded-xl text-sm focus:border-[var(--accent)] outline-none" />
               </div>
+
               <div className="space-y-1">
                 <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Descripción</label>
                 <textarea name="descripcion" rows={2} defaultValue={editingItem?.descripcion} className="w-full px-4 py-2.5 bg-[var(--card)] border border-[var(--border2)] rounded-xl text-sm focus:border-[var(--accent)] outline-none resize-none" />

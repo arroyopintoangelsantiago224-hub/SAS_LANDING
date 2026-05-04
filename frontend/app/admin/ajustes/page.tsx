@@ -7,9 +7,12 @@ import {
   Upload, 
   Image as ImageIcon,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Eraser
 } from 'lucide-react';
 import { fetchConfigs, adminUpdateConfigs, uploadImage } from '@/lib/api';
+import { ImageUpload } from '@/components/ImageUpload';
+
 
 export default function AdminConfigPage() {
   const [configs, setConfigs] = useState<any>({});
@@ -108,28 +111,40 @@ export default function AdminConfigPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-[var(--card)] border border-[var(--border)] rounded-[var(--radius2)] p-6 space-y-6">
-          {/* Logo Upload */}
-          <div className="space-y-2">
-            <label className="text-[10px] font-mono uppercase tracking-widest text-[var(--muted)]">Logotipo del Sitio</label>
-            <div 
-              onClick={() => fileInputRef.current?.click()}
-              className="relative w-32 h-32 rounded-2xl border-2 border-dashed border-[var(--border2)] bg-[var(--card2)] hover:border-[var(--accent)] transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center group"
-            >
-              {previewUrl ? (
-                <img src={previewUrl} alt="Logo" className="w-full h-full object-contain p-2" />
-              ) : (
-                <div className="text-center">
-                  <ImageIcon className="w-8 h-8 text-[var(--muted)] mx-auto mb-1" />
-                  <p className="text-[9px] text-[var(--muted)] font-bold">Subir Logo</p>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <Upload className="w-6 h-6 text-white" />
-              </div>
-            </div>
-            <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-            <p className="text-[10px] text-[var(--muted)] italic">Se recomienda un logo con fondo transparente (PNG/WebP)</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Logo Upload */}
+            <ImageUpload 
+              label="Logotipo del Sitio"
+              previewUrl={previewUrl}
+              aspectRatio="aspect-square w-32 h-32"
+              onFileSelect={(file) => {
+                setSelectedFile(file);
+                setPreviewUrl(URL.createObjectURL(file));
+              }}
+              onRemove={() => {
+                setPreviewUrl('');
+                setSelectedFile(null);
+                setConfigs({...configs, site_logo: ''});
+              }}
+            />
+
+            {/* Favicon Upload */}
+            <ImageUpload 
+              label="Favicon (Icono de pestaña)"
+              previewUrl={previewFaviconUrl}
+              aspectRatio="aspect-square w-16 h-16"
+              onFileSelect={(file) => {
+                setSelectedFavicon(file);
+                setPreviewFaviconUrl(URL.createObjectURL(file));
+              }}
+              onRemove={() => {
+                setPreviewFaviconUrl('');
+                setSelectedFavicon(null);
+                setConfigs({...configs, site_favicon: ''});
+              }}
+            />
           </div>
+
 
           <div className="grid grid-cols-1 gap-6">
             <div className="space-y-1">
