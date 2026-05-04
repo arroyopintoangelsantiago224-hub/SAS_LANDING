@@ -17,7 +17,8 @@ import {
   Activity,
   ShoppingBag,
   CreditCard,
-  Bell
+  Bell,
+  MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
@@ -49,6 +50,7 @@ export default function AdminLayout({
     { name: 'Pagos', icon: CreditCard, href: '/admin/pagos' },
     { name: 'Notificaciones', icon: Bell, href: '/admin/notificaciones' },
     { name: 'Mis APIs', icon: Activity, href: '/admin/apis' },
+    { name: 'Sedes', icon: MapPin, href: '/admin/sedes' },
     { name: 'Personalizar', icon: Palette, href: '/admin/personalizar' },
     { name: 'Ajustes', icon: Settings, href: '/admin/ajustes' },
   ];

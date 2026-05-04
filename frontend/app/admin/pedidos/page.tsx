@@ -15,7 +15,8 @@ import {
   Smartphone,
   Eye,
   Loader2,
-  Package
+  Package,
+  Store
 } from 'lucide-react';
 import { adminFetchOrders, adminUpdateOrder } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -157,6 +158,16 @@ export default function PedidosPage() {
                         <Smartphone className="w-3.5 h-3.5" />
                         <span className="uppercase text-[10px] tracking-widest">{order.metodo_pago}</span>
                       </div>
+                      <div className="h-4 w-[1px] bg-[var(--border)]" />
+                      <div className="flex items-center gap-1.5">
+                        {order.tipo_entrega === 'recoger' ? <Store className="w-3.5 h-3.5 text-blue-500" /> : <Truck className="w-3.5 h-3.5 text-green-500" />}
+                        <span className="uppercase text-[10px] tracking-widest">{order.tipo_entrega}</span>
+                      </div>
+                      <div className="h-4 w-[1px] bg-[var(--border)]" />
+                      <div className="flex items-center gap-1.5 text-[var(--accent)]">
+                        <Store className="w-3.5 h-3.5" />
+                        <span className="uppercase text-[10px] tracking-widest font-black">{order.sede?.nombre || 'N/A'}</span>
+                      </div>
                     </div>
                     <div className="text-xl font-black tracking-tight text-[var(--accent)]">
                       ${Number(order.total).toLocaleString('es-CO')}
@@ -185,15 +196,27 @@ export default function PedidosPage() {
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-2xl font-black tracking-tighter">{selectedOrder.nombre_cliente}</h3>
-                    <div className="flex items-center gap-2 text-[var(--muted)] text-sm mt-1 font-medium">
-                      <Smartphone className="w-4 h-4" />
-                      <span>{selectedOrder.telefono_cliente}</span>
+                    <div className="flex flex-wrap items-center gap-4 text-[var(--muted)] text-sm mt-1 font-medium">
+                      <div className="flex items-center gap-2">
+                        <Smartphone className="w-4 h-4" />
+                        <span>{selectedOrder.telefono_cliente}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Store className="w-4 h-4 text-[var(--accent)]" />
+                        <span>Sede: {selectedOrder.sede?.nombre || 'N/A'}</span>
+                      </div>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-2 p-3 bg-black/20 rounded-2xl border border-white/5">
-                    <MapPin className="w-5 h-5 text-[var(--accent)] shrink-0" />
-                    <p className="text-xs font-medium leading-relaxed">{selectedOrder.direccion_cliente}</p>
+                    {selectedOrder.tipo_entrega === 'recoger' ? (
+                      <Store className="w-5 h-5 text-blue-500 shrink-0" />
+                    ) : (
+                      <MapPin className="w-5 h-5 text-[var(--accent)] shrink-0" />
+                    )}
+                    <p className="text-xs font-medium leading-relaxed">
+                      {selectedOrder.tipo_entrega === 'recoger' ? 'Recoger en Tienda' : selectedOrder.direccion_cliente}
+                    </p>
                   </div>
                 </div>
               </div>

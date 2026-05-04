@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PedidoController;
 use App\Http\Controllers\Api\MetodoPagoController;
 use App\Http\Controllers\Api\NotificacionSonidoController;
+use App\Http\Controllers\Api\SedeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,7 @@ Route::get('/banners', [BannerController::class, 'index']);
 Route::get('/configs', [ConfigController::class, 'index']);
 Route::get('/metodos-pago', [MetodoPagoController::class, 'index']);
 Route::get('/sonido-activo', [NotificacionSonidoController::class, 'getActive']);
+Route::get('/sedes', [SedeController::class, 'index']);
 Route::post('/pedidos', [PedidoController::class, 'store']);
 
 // Admin routes
@@ -36,6 +38,7 @@ Route::middleware(['admin.secure'])->group(function () {
     Route::apiResource('admin/pedidos', PedidoController::class);
     Route::apiResource('admin/metodos-pago', MetodoPagoController::class);
     Route::apiResource('admin/sonidos', NotificacionSonidoController::class);
+    Route::apiResource('admin/sedes', SedeController::class);
     Route::post('/admin/configs', [ConfigController::class, 'update']);
 });
 // CORS-safe storage access for audio/images

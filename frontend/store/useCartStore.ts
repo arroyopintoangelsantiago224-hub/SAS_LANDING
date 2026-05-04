@@ -15,6 +15,8 @@ export interface CustomerData {
   direccion: string;
   latitud?: number;
   longitud?: number;
+  tipo_entrega: 'domicilio' | 'recoger';
+  sede_id?: number;
 }
 
 interface CartStore {
@@ -72,7 +74,7 @@ export const useCartStore = create<CartStore>()(
           ),
         });
       },
-      clearCart: () => set({ items: [], customerData: { nombre: '', telefono: '', direccion: '', latitud: undefined, longitud: undefined }, paymentMethod: '' }),
+      clearCart: () => set({ items: [], customerData: { nombre: '', telefono: '', direccion: '', latitud: undefined, longitud: undefined, tipo_entrega: 'domicilio', sede_id: undefined }, paymentMethod: '' }),
       clearItems: () => set({ items: [] }),
       getTotal: () => {
         return get().items.reduce(
@@ -89,6 +91,8 @@ export const useCartStore = create<CartStore>()(
         direccion: '',
         latitud: undefined,
         longitud: undefined,
+        tipo_entrega: 'domicilio',
+        sede_id: undefined,
       },
       setCustomerData: (data) => set((state) => ({
         customerData: { ...state.customerData, ...data }

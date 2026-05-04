@@ -17,7 +17,7 @@ class PedidoController extends Controller
      */
     public function index()
     {
-        $pedidos = Pedido::with('items')->latest()->get();
+        $pedidos = Pedido::with(['items', 'sede'])->latest()->get();
         return response()->json($pedidos);
     }
 
@@ -34,6 +34,8 @@ class PedidoController extends Controller
             'latitud' => 'nullable|numeric',
             'longitud' => 'nullable|numeric',
             'metodo_pago' => 'required|string',
+            'tipo_entrega' => 'required|string|in:domicilio,recoger',
+            'sede_id' => 'required|exists:sedes,id',
             'notas' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.producto_id' => 'required|exists:productos,id',
@@ -72,6 +74,8 @@ class PedidoController extends Controller
                 'subtotal' => $subtotal,
                 'total' => $subtotal,
                 'metodo_pago' => $validated['metodo_pago'],
+                'tipo_entrega' => $validated['tipo_entrega'],
+                'sede_id' => $validated['sede_id'],
                 'estado_pago' => 'pendiente',
                 'estado_pedido' => 'pendiente',
                 'notas' => $validated['notas'] ?? null,
@@ -85,12 +89,12 @@ class PedidoController extends Controller
 
             // Broadcast the event (wrapped in try-catch so it doesn't block the order if Reverb is down)
             try {
-                broadcast(new \App\Events\OrderCreated($pedido->load('items')))->toOthers();
+                broadcast(new \App\Events\OrderCreated($pedido->load(['items', 'sede'])))->toOthers();
             } catch (\Exception $e) {
                 \Log::warning('Broadcast failed: ' . $e->getMessage());
             }
 
-            return response()->json($pedido->load('items'), 201);
+            return response()->json($pedido->load(['items', 'sede']), 201);
         } catch (\Exception $e) {
             DB::rollBack();
             \Log::error('Error creating order: ' . $e->getMessage(), [
@@ -110,7 +114,7 @@ class PedidoController extends Controller
      */
     public function show(string $id)
     {
-        $pedido = Pedido::with('items')->find($id);
+        $pedido = Pedido::with(['items', 'sede'])->find($id);
         if (!$pedido) {
             return response()->json(['message' => 'Pedido no encontrado'], 404);
         }
@@ -133,6 +137,7 @@ class PedidoController extends Controller
         ]);
 
         $pedido->update($validated);
+        $pedido->load(['items', 'sede']);
 
         return response()->json($pedido);
     }

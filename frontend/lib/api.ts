@@ -218,3 +218,30 @@ export async function adminDeleteSound(id: number) {
   const res = await fetch(`/api/proxy/admin/sonidos/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
   return res.json();
 }
+
+// Sedes Admin
+export async function adminFetchSedes() {
+  const res = await fetch(`/api/proxy/admin/sedes?admin=true`, { headers: { 'Accept': 'application/json' } });
+  return res.json();
+}
+
+export async function adminSaveSede(sede: any) {
+  const method = sede.id ? 'PUT' : 'POST';
+  const url = sede.id ? `/api/proxy/admin/sedes/${sede.id}` : `/api/proxy/admin/sedes`;
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    body: JSON.stringify(sede),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'Failed to save sede');
+  }
+  return res.json();
+}
+
+export async function adminDeleteSede(id: number) {
+  const res = await fetch(`/api/proxy/admin/sedes/${id}`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+  return res.json();
+}
+

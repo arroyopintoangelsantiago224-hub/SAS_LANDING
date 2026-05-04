@@ -20,8 +20,15 @@ class Pedido extends Model
         'metodo_pago',
         'estado_pago',
         'estado_pedido',
-        'notas'
+        'notas',
+        'tipo_entrega',
+        'sede_id'
     ];
+
+    public function sede()
+    {
+        return $this->belongsTo(Sede::class);
+    }
 
     public function items()
     {

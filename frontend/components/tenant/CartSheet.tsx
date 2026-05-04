@@ -2,7 +2,7 @@
 
 import { useCartStore } from '@/store/useCartStore';
 import { siteConfig } from '@/config/site';
-import { Trash2, Plus, Minus, X, Send, ShoppingBag, MapPin, CreditCard, CheckCircle, Loader2, ArrowLeft, Smartphone, User, Clock, Truck, AlertCircle } from 'lucide-react';
+import { Trash2, Plus, Minus, X, Send, ShoppingBag, MapPin, CreditCard, CheckCircle, Loader2, ArrowLeft, Smartphone, User, Clock, Truck, AlertCircle, Store, ChevronDown } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -27,6 +27,7 @@ export default function CartSheet() {
   const [orderResponse, setOrderResponse] = useState<any>(null);
   const [siteConfigs, setSiteConfigs] = useState<any>({});
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [sedes, setSedes] = useState<any[]>([]);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
 
   const { isLoaded } = useJsApiLoader({
@@ -52,6 +53,12 @@ export default function CartSheet() {
       });
       const payData = await payRes.json();
       setPaymentMethods(payData.filter((m: any) => m.activo));
+
+      const sedesRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/sedes`, {
+        headers: { 'ngrok-skip-browser-warning': 'true' }
+      });
+      const sedesData = await sedesRes.json();
+      setSedes(sedesData);
     } catch (error) {
       console.error('Error loading site configs:', error);
     }
@@ -86,13 +93,15 @@ export default function CartSheet() {
     setLoading(true);
     try {
       const orderData = {
-        usuario_id: session?.user?.id || null, // Assuming id is available in session
+        usuario_id: session?.user?.id || null,
         nombre_cliente: customerData.nombre,
         telefono_cliente: customerData.telefono,
-        direccion_cliente: customerData.direccion,
-        latitud: customerData.latitud || null,
-        longitud: customerData.longitud || null,
+        direccion_cliente: customerData.tipo_entrega === 'recoger' ? 'Recoger en tienda' : customerData.direccion,
+        latitud: customerData.tipo_entrega === 'recoger' ? null : (customerData.latitud || null),
+        longitud: customerData.tipo_entrega === 'recoger' ? null : (customerData.longitud || null),
         metodo_pago: paymentMethod,
+        tipo_entrega: customerData.tipo_entrega,
+        sede_id: customerData.sede_id || null,
         items: items.map(item => ({
           producto_id: item.id,
           cantidad: item.cantidad
@@ -343,11 +352,68 @@ export default function CartSheet() {
 
           {step === 'shipping' && (
             <div className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-              {/* Bloque 1: Datos y Dirección */}
+              {/* Bloque 0: Sede y Tipo de Entrega */}
               <div className="space-y-6">
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center text-[10px] font-black">1</div>
-                  <h3 className="text-sm font-black uppercase tracking-widest italic">Datos y Dirección</h3>
+                  <h3 className="text-sm font-black uppercase tracking-widest italic">Punto de Venta y Entrega</h3>
+                </div>
+
+                <div className="space-y-4 pl-9">
+                  {/* Selector de Sede */}
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Selecciona la Sede</label>
+                    <div className="relative">
+                      <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <select 
+                        value={customerData.sede_id || ''}
+                        onChange={(e) => setCustomerData({ sede_id: Number(e.target.value) })}
+                        className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium appearance-none cursor-pointer"
+                      >
+                        <option value="" disabled>Selecciona una sede...</option>
+                        {sedes.map((sede) => (
+                          <option key={sede.id} value={sede.id}>{sede.nombre}</option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Selector de Tipo de Entrega */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => setCustomerData({ tipo_entrega: 'domicilio' })}
+                      className={cn(
+                        "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
+                        customerData.tipo_entrega === 'domicilio' 
+                          ? "bg-[var(--accent)]/10 border-[var(--accent)] text-black dark:text-white" 
+                          : "bg-gray-50 dark:bg-white/5 border-transparent text-gray-400"
+                      )}
+                    >
+                      <Truck className="w-6 h-6" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Domicilio</span>
+                    </button>
+                    <button 
+                      onClick={() => setCustomerData({ tipo_entrega: 'recoger' })}
+                      className={cn(
+                        "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
+                        customerData.tipo_entrega === 'recoger' 
+                          ? "bg-[var(--accent)]/10 border-[var(--accent)] text-black dark:text-white" 
+                          : "bg-gray-50 dark:bg-white/5 border-transparent text-gray-400"
+                      )}
+                    >
+                      <ShoppingBag className="w-6 h-6" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Recoger</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bloque 1: Datos y Dirección */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-black dark:bg-white text-white dark:text-black flex items-center justify-center text-[10px] font-black">2</div>
+                  <h3 className="text-sm font-black uppercase tracking-widest italic">Tus Datos</h3>
                 </div>
 
                 <div className="space-y-4 pl-9">
@@ -386,115 +452,119 @@ export default function CartSheet() {
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Dirección Escrita</label>
-                    <textarea 
-                      value={customerData.direccion}
-                      onChange={(e) => setCustomerData({ direccion: e.target.value })}
-                      rows={2}
-                      className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium resize-none"
-                      placeholder="Calle, Carrera, Barrio, Apto/Casa..."
-                    />
-                  </div>
+                  {customerData.tipo_entrega === 'domicilio' && (
+                    <div className="space-y-1 animate-in slide-in-from-top-4 duration-300">
+                      <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Dirección Escrita</label>
+                      <textarea 
+                        value={customerData.direccion}
+                        onChange={(e) => setCustomerData({ direccion: e.target.value })}
+                        rows={2}
+                        className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium resize-none"
+                        placeholder="Calle, Carrera, Barrio, Apto/Casa..."
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Bloque 2: Ubicación GPS */}
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-black flex items-center justify-center text-[10px] font-black">2</div>
-                    <h3 className="text-sm font-black uppercase tracking-widest italic">Ubicación GPS (Opcional)</h3>
+              {customerData.tipo_entrega === 'domicilio' && (
+                <div className="space-y-6 animate-in slide-in-from-top-4 duration-500">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-black flex items-center justify-center text-[10px] font-black">3</div>
+                      <h3 className="text-sm font-black uppercase tracking-widest italic">Ubicación GPS (Opcional)</h3>
+                    </div>
+                    {customerData.latitud && (
+                      <div className="flex flex-col items-end gap-2">
+                        <div className={cn(
+                          "flex items-center gap-1.5 px-3 py-1 rounded-full border animate-in zoom-in",
+                          locationAccuracy && locationAccuracy <= 100 
+                            ? "bg-green-500/10 border-green-500/20 text-green-600" 
+                            : "bg-amber-500/10 border-amber-500/20 text-amber-600"
+                        )}>
+                          {locationAccuracy && locationAccuracy <= 100 ? (
+                            <CheckCircle className="w-3 h-3" />
+                          ) : (
+                            <AlertCircle className="w-3 h-3" />
+                          )}
+                          <span className="text-[8px] font-black uppercase tracking-widest">
+                            {locationAccuracy && locationAccuracy <= 100 ? 'GPS Preciso' : 'Ubicación Estimada'}
+                          </span>
+                          <div className="h-3 w-[1px] bg-current opacity-20 mx-1" />
+                          <span className="text-[9px] font-black">{calculateEfficiency(locationAccuracy)}%</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {customerData.latitud && (
-                    <div className="flex flex-col items-end gap-2">
-                      <div className={cn(
-                        "flex items-center gap-1.5 px-3 py-1 rounded-full border animate-in zoom-in",
-                        locationAccuracy && locationAccuracy <= 100 
-                          ? "bg-green-500/10 border-green-500/20 text-green-600" 
-                          : "bg-amber-500/10 border-amber-500/20 text-amber-600"
-                      )}>
-                        {locationAccuracy && locationAccuracy <= 100 ? (
-                          <CheckCircle className="w-3 h-3" />
-                        ) : (
-                          <AlertCircle className="w-3 h-3" />
-                        )}
-                        <span className="text-[8px] font-black uppercase tracking-widest">
-                          {locationAccuracy && locationAccuracy <= 100 ? 'GPS Preciso' : 'Ubicación Estimada'}
-                        </span>
-                        <div className="h-3 w-[1px] bg-current opacity-20 mx-1" />
-                        <span className="text-[9px] font-black">{calculateEfficiency(locationAccuracy)}%</span>
+
+                  <div className="pl-9 space-y-4">
+                    {customerData.latitud && locationAccuracy && locationAccuracy > 100 && (
+                      <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-2 animate-in slide-in-from-top-2">
+                        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
+                          Ubicación poco precisa. **Por favor, intenta capturarla nuevamente para mejorar la exactitud.**
+                        </p>
                       </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pl-9 space-y-4">
-                  {customerData.latitud && locationAccuracy && locationAccuracy > 100 && (
-                    <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-2 animate-in slide-in-from-top-2">
-                      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                      <p className="text-[10px] text-amber-700 font-medium leading-relaxed">
-                        Ubicación poco precisa. **Por favor, intenta capturarla nuevamente para mejorar la exactitud.**
-                      </p>
-                    </div>
-                  )}
-                  <p className="text-[10px] text-gray-500 leading-relaxed font-medium italic">
-                    Recomendado: Vincular tu ubicación exacta para que el repartidor llegue sin errores.
-                  </p>
-                  
-                  <button 
-                    onClick={handleGetLocation}
-                    disabled={detectingLocation}
-                    className={cn(
-                      "w-full py-4 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center gap-3 group",
-                      customerData.latitud 
-                        ? "bg-green-500/5 border-green-500/20 text-green-600" 
-                        : "bg-gray-50 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-[var(--accent)] text-gray-500 hover:text-[var(--accent)]"
                     )}
-                  >
-                    {detectingLocation ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : customerData.latitud ? (
-                      <>
-                        <MapPin className="w-5 h-5" />
-                        <span className="text-xs font-black uppercase tracking-widest">Actualizar Punto GPS</span>
-                      </>
-                    ) : (
-                      <>
-                        <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        <span className="text-xs font-black uppercase tracking-widest">Capturar mi posición</span>
-                      </>
-                    )}
-                  </button>
+                    <p className="text-[10px] text-gray-500 leading-relaxed font-medium italic">
+                      Recomendado: Vincular tu ubicación exacta para que el repartidor llegue sin errores.
+                    </p>
+                    
+                    <button 
+                      onClick={handleGetLocation}
+                      disabled={detectingLocation}
+                      className={cn(
+                        "w-full py-4 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center gap-3 group",
+                        customerData.latitud 
+                          ? "bg-green-500/5 border-green-500/20 text-green-600" 
+                          : "bg-gray-50 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-[var(--accent)] text-gray-500 hover:text-[var(--accent)]"
+                      )}
+                    >
+                      {detectingLocation ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : customerData.latitud ? (
+                        <>
+                          <MapPin className="w-5 h-5" />
+                          <span className="text-xs font-black uppercase tracking-widest">Actualizar Punto GPS</span>
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                          <span className="text-xs font-black uppercase tracking-widest">Capturar mi posición</span>
+                        </>
+                      )}
+                    </button>
 
-                  {/* Mapa de Calibración */}
-                  {siteConfigs.habilitar_calibracion === '1' && customerData.latitud && isLoaded && (
-                    <div className="space-y-3">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-center text-gray-400">Mapa de referencia</p>
-                      <div className="w-full h-44 rounded-3xl overflow-hidden border border-black/5 dark:border-white/10 shadow-lg shadow-black/5">
-                        <GoogleMap
-                          mapContainerStyle={{ width: '100%', height: '100%' }}
-                          center={{ lat: customerData.latitud, lng: customerData.longitud }}
-                          zoom={17}
-                          options={{
-                            disableDefaultUI: true,
-                            zoomControl: false,
-                            styles: [{ featureType: 'all', elementType: 'labels.text.fill', color: '#333333' }]
-                          }}
-                        >
-                          <MarkerF
-                            position={{ lat: customerData.latitud, lng: customerData.longitud }}
-                            draggable={true}
-                            onDragEnd={(e) => {
-                              if (e.latLng) handleMapCalibration(e.latLng.lat(), e.latLng.lng());
+                    {/* Mapa de Calibración */}
+                    {siteConfigs.habilitar_calibracion === '1' && customerData.latitud && isLoaded && (
+                      <div className="space-y-3">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-center text-gray-400">Mapa de referencia</p>
+                        <div className="w-full h-44 rounded-3xl overflow-hidden border border-black/5 dark:border-white/10 shadow-lg shadow-black/5">
+                          <GoogleMap
+                            mapContainerStyle={{ width: '100%', height: '100%' }}
+                            center={{ lat: customerData.latitud, lng: customerData.longitud }}
+                            zoom={17}
+                            options={{
+                              disableDefaultUI: true,
+                              zoomControl: false,
+                              styles: [{ featureType: 'all', elementType: 'labels.text.fill', color: '#333333' }]
                             }}
-                          />
-                        </GoogleMap>
+                          >
+                            <MarkerF
+                              position={{ lat: customerData.latitud, lng: customerData.longitud }}
+                              draggable={true}
+                              onDragEnd={(e) => {
+                                if (e.latLng) handleMapCalibration(e.latLng.lat(), e.latLng.lng());
+                              }}
+                            />
+                          </GoogleMap>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -703,7 +773,15 @@ export default function CartSheet() {
             </div>
             
             <button 
-              disabled={loading || (step === 'payment' && !paymentMethod) || (step === 'shipping' && (!customerData.nombre || !customerData.telefono || !customerData.direccion))}
+              disabled={loading || 
+                (step === 'payment' && !paymentMethod) || 
+                (step === 'shipping' && (
+                  !customerData.sede_id || 
+                  !customerData.nombre || 
+                  !customerData.telefono || 
+                  (customerData.tipo_entrega === 'domicilio' && !customerData.direccion)
+                ))
+              }
               onClick={() => {
                 if (step === 'cart') setStep('shipping');
                 else if (step === 'shipping') setStep('payment');
