@@ -16,26 +16,39 @@ export default function Preloader() {
 
     const checkAllImagesLoaded = () => {
       const images = Array.from(document.querySelectorAll('img'));
-      if (images.length === 0) return true;
+      // If no images are found yet, we wait (assuming some will be injected by JS)
+      // unless too much time has passed
+      if (images.length === 0) return false; 
       return images.every(img => img.complete);
     };
 
     const checkAndFinish = () => {
       if (timerFinished && pageLoaded && imagesFinished && isMounted) {
-        setFadeOut(true);
+        // Add a small extra delay for layout stabilization
         setTimeout(() => {
-          if (isMounted) setLoading(false);
-        }, 500);
+          if (isMounted) {
+            setFadeOut(true);
+            setTimeout(() => {
+              if (isMounted) setLoading(false);
+            }, 600);
+          }
+        }, 300);
       }
     };
 
-    // 1. Minimum duration timer (2 seconds for better feel)
+    // 1. Minimum duration timer (increased to 2.5s for stability)
     const timer = setTimeout(() => {
       timerFinished = true;
       checkAndFinish();
-    }, 2000);
+    }, 2500);
 
-    // 2. Window Load Event
+    // 2. Safety timeout for images (if no images are found after 4s, proceed anyway)
+    const safetyTimer = setTimeout(() => {
+      imagesFinished = true;
+      checkAndFinish();
+    }, 4000);
+
+    // 3. Window Load Event
     const handleLoad = () => {
       pageLoaded = true;
       checkAndFinish();
@@ -47,11 +60,10 @@ export default function Preloader() {
       window.addEventListener('load', handleLoad);
     }
 
-    // 3. Continuous Image Check (to catch images added by API calls)
+    // 4. Continuous Image Check
     const imageInterval = setInterval(() => {
       if (checkAllImagesLoaded()) {
         imagesFinished = true;
-        // If page is also loaded (or readyState complete), try to finish
         if (document.readyState === 'complete') pageLoaded = true;
         checkAndFinish();
       }
@@ -61,8 +73,10 @@ export default function Preloader() {
       isMounted = false;
       window.removeEventListener('load', handleLoad);
       clearTimeout(timer);
+      clearTimeout(safetyTimer);
       clearInterval(imageInterval);
     };
+
   }, []);
 
   if (!loading) return null;

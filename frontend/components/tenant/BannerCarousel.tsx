@@ -57,8 +57,10 @@ export default function BannerCarousel() {
               <img
                 src={banner.imagen_url}
                 alt={banner.titulo}
+                loading="eager"
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10000ms] ease-linear group-hover:scale-110"
               />
+
               
               {/* Modern Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
