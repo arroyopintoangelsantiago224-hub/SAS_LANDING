@@ -4,6 +4,7 @@ import { siteConfig } from '@/config/site';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Providers } from '@/components/Providers';
 import Preloader from '@/components/tenant/Preloader';
+import MyOrdersToggle from '@/components/tenant/MyOrdersToggle';
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
@@ -28,11 +29,12 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider
             attribute="class"
-            defaultTheme="light"
-            enableSystem
+            defaultTheme="dark"
+            enableSystem={false}
             disableTransitionOnChange
           >
-            <Preloader />
+           <Preloader />
+            <MyOrdersToggle />
             <Toaster richColors position="top-right" />
             {children}
           </ThemeProvider>

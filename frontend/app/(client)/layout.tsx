@@ -18,7 +18,6 @@ export default function ClientLayout({
           © {new Date().getFullYear()} {siteConfig.name}. Todos los derechos reservados.
         </div>
       </footer>
-      <ThemeToggle />
     </>
   );
 }

@@ -34,6 +34,8 @@ interface CartStore {
   setCustomerData: (data: Partial<CustomerData>) => void;
   paymentMethod: string;
   setPaymentMethod: (method: string) => void;
+  lastOrderFinished: boolean;
+  setLastOrderFinished: (finished: boolean) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -41,7 +43,9 @@ export const useCartStore = create<CartStore>()(
     (set, get) => ({
       items: [],
       isCartOpen: false,
+      lastOrderFinished: false,
       setCartOpen: (open) => set({ isCartOpen: open }),
+      setLastOrderFinished: (finished) => set({ lastOrderFinished: finished }),
       addItem: (product) => {
         const currentItems = get().items;
         const existingItem = currentItems.find((item) => item.id === product.id);

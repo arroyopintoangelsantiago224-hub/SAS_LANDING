@@ -125,6 +125,7 @@ export default function CartSheet() {
       const data = await response.json();
       setOrderResponse(data);
       clearItems(); // Borrar items del local storage una vez enviado el pedido
+      useCartStore.getState().setLastOrderFinished(true);
       setStep('success');
     } catch (error: any) {
       console.error('Error creating order:', error);
@@ -217,12 +218,15 @@ export default function CartSheet() {
     const message = `*Nuevo Pedido Confirmado (#${orderResponse.id})*\n\n` +
       `👤 *Cliente:* ${orderResponse.nombre_cliente || customerData.nombre}\n` +
       `📞 *Teléfono:* ${orderResponse.telefono_cliente || customerData.telefono}\n` +
-      `📍 *Dirección:* ${orderResponse.direccion_cliente || customerData.direccion}\n` +
+      `📍 *Ubicación:* ${orderResponse.tipo_entrega === 'recoger' ? 'Recoger en Sede' : (orderResponse.direccion_cliente || customerData.direccion)}\n` +
+      `🏢 *Sede:* ${orderResponse.sede?.nombre || 'N/A'}\n` +
       `💳 *Pago:* ${orderResponse.metodo_pago || paymentMethod}\n\n` +
       `${itemsList}\n\n` +
-      `*Total: $${Number(orderResponse.total).toLocaleString('es-CO')}*`;
+      `*Total: $${Number(orderResponse.total).toLocaleString('es-CO')}*\n\n` +
+      `🖼️ *Adjunto comprobante de pago por este medio.*`;
     
-    const whatsappUrl = `https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(message)}`;
+    const targetPhone = orderResponse.sede?.telefono || siteConfig.whatsapp;
+    const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
     setStep('cart');
     setCartOpen(false);
@@ -669,7 +673,7 @@ export default function CartSheet() {
                     </div>
                     
                     {config.qr_imagen && selectedMethod.qr_imagen && (
-                      <div className="aspect-square w-32 mx-auto bg-white p-2 rounded-2xl shadow-sm border border-black/5">
+                      <div className="aspect-square w-48 mx-auto bg-white p-3 rounded-3xl shadow-xl border border-black/5 animate-in zoom-in duration-700">
                         <img src={selectedMethod.qr_imagen} alt="QR" className="w-full h-full object-contain" />
                       </div>
                     )}
@@ -686,27 +690,28 @@ export default function CartSheet() {
                           <p className="text-xs font-bold text-gray-900 dark:text-white">Banco: {selectedMethod.banco}</p>
                         )}
                         {config.numero_cuenta && selectedMethod.numero_cuenta && (
-                          <p className="text-xs font-bold text-gray-900 dark:text-white">Cuenta: {selectedMethod.numero_cuenta} ({selectedMethod.tipo_cuenta})</p>
+                          <p className="text-xs font-bold text-gray-900 dark:text-white">
+                            {selectedMethod.tipo_cuenta ? `${selectedMethod.tipo_cuenta.charAt(0).toUpperCase() + selectedMethod.tipo_cuenta.slice(1)}: ` : 'Cuenta: '}
+                            {selectedMethod.numero_cuenta}
+                          </p>
                         )}
                         {config.titular && selectedMethod.titular && (
                           <p className="text-xs font-medium text-[var(--muted)]">Titular: {selectedMethod.titular}</p>
                         )}
                       </div>
                       
+                      <div className="p-4 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 mt-4">
+                        <p className="text-[11px] text-gray-900 dark:text-white font-black uppercase tracking-tight leading-relaxed">
+                          ⚠️ Por favor, una vez realices el pago, envía el comprobante por WhatsApp para confirmar tu pedido.
+                        </p>
+                      </div>
+
                       {config.instrucciones && selectedMethod.instrucciones && (
                         <p className="text-[10px] text-gray-500 leading-relaxed px-4 italic mt-2">
                           {selectedMethod.instrucciones}
                         </p>
                       )}
                     </div>
-
-                    <button 
-                      disabled={loading}
-                      onClick={handleMarkAsPaid}
-                      className="w-full py-3 rounded-xl bg-black dark:bg-white text-white dark:text-black font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
-                    >
-                      {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Ya pagué'}
-                    </button>
                   </div>
                 );
               })()}

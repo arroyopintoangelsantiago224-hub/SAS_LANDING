@@ -66,12 +66,7 @@ export default function CatalogoPage() {
             <p className="text-[var(--muted)] text-xs md:text-sm">Explora nuestros productos exclusivos</p>
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
-            <div className="flex items-center gap-2 px-4 py-2 bg-[var(--card2)] rounded-full text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">
-              <LayoutGrid className="w-3.5 h-3.5" />
-              Grid View
-            </div>
-          </div>
+
         </div>
 
         <div className="p-4 md:p-5 mb-8 md:mb-12 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 bg-transparent rounded-none mx-0">
