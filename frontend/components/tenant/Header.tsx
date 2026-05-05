@@ -133,7 +133,7 @@ export default function Header() {
               </button>
 
               {/* Notifications Dropdown */}
-              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#0A0A0C] border border-black/5 dark:border-white/5 rounded-2xl shadow-2xl opacity-0 invisible group-hover/notifications:opacity-100 group-hover/notifications:visible transition-all duration-300 transform origin-top-right scale-95 group-hover/notifications:scale-100 z-[60] overflow-hidden">
+              <div className="absolute right-[-50px] md:right-0 mt-2 w-72 md:w-80 bg-white dark:bg-[#0A0A0C] border border-black/5 dark:border-white/5 rounded-2xl shadow-2xl opacity-0 invisible group-hover/notifications:opacity-100 group-hover/notifications:visible transition-all duration-300 transform origin-top-right scale-95 group-hover/notifications:scale-100 z-[60] overflow-hidden">
                 <div className="p-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/5">
                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Notificaciones</p>
                   {unreadCount > 0 && (
