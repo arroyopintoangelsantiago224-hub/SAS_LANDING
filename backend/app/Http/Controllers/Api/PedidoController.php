@@ -154,4 +154,23 @@ class PedidoController extends Controller
         $pedido->delete();
         return response()->json(['message' => 'Pedido eliminado']);
     }
+
+    public function historial(Request $request)
+    {
+        $ids = $request->get('ids');
+        if (!$ids) {
+            return response()->json([]);
+        }
+
+        if (is_string($ids)) {
+            $ids = explode(',', $ids);
+        }
+
+        $pedidos = Pedido::with(['items', 'sede'])
+            ->whereIn('id', $ids)
+            ->latest()
+            ->get();
+
+        return response()->json($pedidos);
+    }
 }

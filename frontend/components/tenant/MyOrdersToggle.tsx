@@ -6,7 +6,10 @@ import { useCartStore } from '@/store/useCartStore';
 import { siteConfig } from '@/config/site';
 import { cn } from '@/lib/utils';
 
+import { useRouter } from 'next/navigation';
+
 export default function MyOrdersToggle() {
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const isCartOpen = useCartStore((state) => state.isCartOpen);
   const lastOrderFinished = useCartStore((state) => state.lastOrderFinished);
@@ -35,7 +38,7 @@ export default function MyOrdersToggle() {
   const primaryColor = siteConfig.colors.primary === '#000000' ? '#E8A030' : siteConfig.colors.primary;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-center">
+    <div className="fixed bottom-6 right-12 z-[100] flex flex-col items-center">
       {/* Texto flotante sobre el botón */}
       <span className="mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400 animate-bounce">
         Mis Pedidos
@@ -60,8 +63,7 @@ export default function MyOrdersToggle() {
       {/* Botón Principal */}
       <button
         onClick={() => {
-          // Aquí se abriría el modal de pedidos del cliente (a implementar si es necesario)
-          window.location.href = '/mis-pedidos'; // O lo que corresponda
+          router.push('/mis-pedidos');
         }}
         className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all animate-in slide-in-from-right-10 duration-500 bg-[#FACC15] border border-yellow-500/50 group"
       >

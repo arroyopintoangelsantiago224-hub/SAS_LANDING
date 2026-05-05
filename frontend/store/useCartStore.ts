@@ -36,6 +36,8 @@ interface CartStore {
   setPaymentMethod: (method: string) => void;
   lastOrderFinished: boolean;
   setLastOrderFinished: (finished: boolean) => void;
+  orderHistory: number[];
+  addToOrderHistory: (orderId: number) => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -44,8 +46,12 @@ export const useCartStore = create<CartStore>()(
       items: [],
       isCartOpen: false,
       lastOrderFinished: false,
+      orderHistory: [],
       setCartOpen: (open) => set({ isCartOpen: open }),
       setLastOrderFinished: (finished) => set({ lastOrderFinished: finished }),
+      addToOrderHistory: (orderId) => set((state) => ({
+        orderHistory: state.orderHistory.includes(orderId) ? state.orderHistory : [...state.orderHistory, orderId]
+      })),
       addItem: (product) => {
         const currentItems = get().items;
         const existingItem = currentItems.find((item) => item.id === product.id);

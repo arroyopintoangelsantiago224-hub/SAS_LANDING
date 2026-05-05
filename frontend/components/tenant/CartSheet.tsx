@@ -126,6 +126,7 @@ export default function CartSheet() {
       setOrderResponse(data);
       clearItems(); // Borrar items del local storage una vez enviado el pedido
       useCartStore.getState().setLastOrderFinished(true);
+      useCartStore.getState().addToOrderHistory(data.id);
       setStep('success');
     } catch (error: any) {
       console.error('Error creating order:', error);
@@ -142,28 +143,44 @@ export default function CartSheet() {
     }
 
     setDetectingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude, accuracy } = position.coords;
-        setCustomerData({ latitud: latitude, longitud: longitude });
-        setLocationAccuracy(accuracy);
-        
-        // Si la precisión es baja (más de 100 metros), sugerir calibración
-        if (accuracy > 100) {
-          setShowMap(true);
+    // Resetear datos actuales para forzar actualización visual inmediata
+    setCustomerData({ latitud: undefined, longitud: undefined });
+    setLocationAccuracy(null);
+
+    let bestPosition: GeolocationPosition | null = null;
+
+    // Usamos watchPosition para ir capturando múltiples lecturas durante 3 segundos
+    // Esto permite que el GPS del dispositivo se "estabilice" y obtenga una mejor precisión
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        if (!bestPosition || position.coords.accuracy < bestPosition.coords.accuracy) {
+          bestPosition = position;
         }
-        
-        setDetectingLocation(false);
       },
       (error) => {
         console.error('Geolocation error:', error);
-        let msg = 'No se pudo obtener tu ubicación.';
-        if (error.code === 1) msg = 'Permiso de ubicación denegado.';
-        alert(msg + ' Por favor, ingrésala manualmente.');
-        setDetectingLocation(false);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+
+    // Esperamos 3 segundos (3000ms) para recolectar la mejor lectura posible
+    setTimeout(() => {
+      navigator.geolocation.clearWatch(watchId);
+      setDetectingLocation(false);
+
+      if (bestPosition) {
+        const { latitude, longitude, accuracy } = (bestPosition as GeolocationPosition).coords;
+        setCustomerData({ latitud: latitude, longitud: longitude });
+        setLocationAccuracy(accuracy);
+        
+        // Si la precisión es mayor a 50 metros, sugerimos calibración manual
+        if (accuracy > 50) {
+          setShowMap(true);
+        }
+      } else {
+        alert('No se pudo obtener tu ubicación. Por favor, asegúrate de tener el GPS activo y los permisos concedidos.');
+      }
+    }, 3000);
   };
 
   const handleMapCalibration = (newLat: number, newLng: number) => {
@@ -172,9 +189,9 @@ export default function CartSheet() {
 
   const calculateEfficiency = (accuracy: number | null) => {
     if (!accuracy) return 0;
-    if (accuracy <= 15) return 100;
-    if (accuracy <= 50) return 98;
-    if (accuracy <= 100) return 90;
+    if (accuracy <= 25) return 100; // Antes 15
+    if (accuracy <= 60) return 98;  // Antes 50
+    if (accuracy <= 120) return 90; // Antes 100
     if (accuracy <= 500) return 75;
     if (accuracy <= 1000) return 50;
     return 25;

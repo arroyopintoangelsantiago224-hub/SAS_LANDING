@@ -28,6 +28,7 @@ Route::get('/metodos-pago', [MetodoPagoController::class, 'index']);
 Route::get('/sonido-activo', [NotificacionSonidoController::class, 'getActive']);
 Route::get('/sedes', [SedeController::class, 'index']);
 Route::post('/pedidos', [PedidoController::class, 'store']);
+Route::get('/pedidos/historial', [PedidoController::class, 'historial']);
 
 // Admin routes
 Route::middleware(['admin.secure'])->group(function () {
