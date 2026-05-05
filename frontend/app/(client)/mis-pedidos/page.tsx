@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useCartStore } from '@/store/useCartStore';
-import { ShoppingBag, Clock, CheckCircle2, Truck, XCircle, MapPin, Smartphone, Store, Package, Loader2, ArrowLeft } from 'lucide-react';
+import { ShoppingBag, Clock, CheckCircle2, Truck, XCircle, MapPin, Smartphone, Store, Package, Loader2, ArrowLeft, MessageCircle } from 'lucide-react';
 import { siteConfig } from '@/config/site';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
 const statusColors: any = {
   pendiente: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
@@ -24,6 +25,7 @@ const statusIcons: any = {
 };
 
 export default function MisPedidosPage() {
+  const { data: session } = useSession();
   const orderHistory = useCartStore((state) => state.orderHistory);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,24 @@ export default function MisPedidosPage() {
 
   useEffect(() => {
     async function fetchHistory() {
+      // Si el usuario está logueado, priorizamos la base de datos por su ID de usuario
+      if (session?.user?.id) {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/pedidos/usuario/${session.user.id}`, {
+            headers: { 'ngrok-skip-browser-warning': 'true' }
+          });
+          const data = await res.json();
+          setOrders(Array.isArray(data) ? data : []);
+          setLoading(false);
+          return;
+        } catch (error) {
+          console.error('Error fetching user orders from DB:', error);
+        }
+      }
+
+      // Si no hay sesión o falló la búsqueda por ID, usamos el historial de localStorage
       if (orderHistory.length === 0) {
+        setOrders([]);
         setLoading(false);
         return;
       }
@@ -50,7 +69,7 @@ export default function MisPedidosPage() {
     }
 
     fetchHistory();
-  }, [orderHistory]);
+  }, [orderHistory, session]);
 
   return (
     <div className="min-h-screen bg-[#0A0A0C] pt-28 pb-20 px-4">
@@ -115,12 +134,26 @@ export default function MisPedidosPage() {
                         </p>
                       </div>
                     </div>
-                    <div className={cn(
-                      "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-2 self-start md:self-center",
-                      statusColors[order.estado_pedido] || 'bg-gray-500/10 text-gray-500 border-gray-500/20'
-                    )}>
-                      {statusIcons[order.estado_pedido] || <Clock className="w-4 h-4" />}
-                      {order.estado_pedido}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button 
+                        onClick={() => {
+                          const phone = order.sede?.telefono || siteConfig.whatsapp;
+                          const message = `*Consulta sobre mi Pedido #${order.id}*\nHola! Necesito soporte con mi compra realizada en la sede ${order.sede?.nombre || 'Principal'}.`;
+                          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 hover:bg-[#25D366]/20 transition-all text-[10px] font-black uppercase tracking-widest"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        <span>Contactar</span>
+                      </button>
+
+                      <div className={cn(
+                        "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-2",
+                        statusColors[order.estado_pedido] || 'bg-gray-500/10 text-gray-500 border-gray-500/20'
+                      )}>
+                        {statusIcons[order.estado_pedido] || <Clock className="w-4 h-4" />}
+                        {order.estado_pedido}
+                      </div>
                     </div>
                   </div>
 

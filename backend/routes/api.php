@@ -29,6 +29,7 @@ Route::get('/sonido-activo', [NotificacionSonidoController::class, 'getActive'])
 Route::get('/sedes', [SedeController::class, 'index']);
 Route::post('/pedidos', [PedidoController::class, 'store']);
 Route::get('/pedidos/historial', [PedidoController::class, 'historial']);
+Route::get('/pedidos/usuario/{usuario_id}', [PedidoController::class, 'porUsuario']);
 
 // Admin routes
 Route::middleware(['admin.secure'])->group(function () {

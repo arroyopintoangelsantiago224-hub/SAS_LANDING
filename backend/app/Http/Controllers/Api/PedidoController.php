@@ -173,4 +173,14 @@ class PedidoController extends Controller
 
         return response()->json($pedidos);
     }
+
+    public function porUsuario(string $usuario_id)
+    {
+        $pedidos = Pedido::with(['items', 'sede'])
+            ->where('usuario_id', $usuario_id)
+            ->latest()
+            ->get();
+
+        return response()->json($pedidos);
+    }
 }

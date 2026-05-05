@@ -38,6 +38,9 @@ interface CartStore {
   setLastOrderFinished: (finished: boolean) => void;
   orderHistory: number[];
   addToOrderHistory: (orderId: number) => void;
+  notifications: any[];
+  addNotification: (notification: any) => void;
+  markNotificationsAsRead: () => void;
 }
 
 export const useCartStore = create<CartStore>()(
@@ -47,10 +50,23 @@ export const useCartStore = create<CartStore>()(
       isCartOpen: false,
       lastOrderFinished: false,
       orderHistory: [],
+      notifications: [],
       setCartOpen: (open) => set({ isCartOpen: open }),
       setLastOrderFinished: (finished) => set({ lastOrderFinished: finished }),
       addToOrderHistory: (orderId) => set((state) => ({
         orderHistory: state.orderHistory.includes(orderId) ? state.orderHistory : [...state.orderHistory, orderId]
+      })),
+      addNotification: (notification) => set((state) => ({
+        notifications: [
+          { ...notification, id: Date.now(), read: false, createdAt: new Date().toISOString() },
+          ...state.notifications
+        ]
+      })),
+      markNotificationsAsRead: () => set((state) => ({
+        notifications: state.notifications.map(n => ({ ...n, read: true }))
+      })),
+      markNotificationAsRead: (id) => set((state) => ({
+        notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
       })),
       addItem: (product) => {
         const currentItems = get().items;

@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useSession, signIn } from 'next-auth/react';
 import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
+import { toast } from 'sonner';
 
 type Step = 'cart' | 'shipping' | 'payment' | 'confirmation' | 'success';
 
@@ -125,6 +126,23 @@ export default function CartSheet() {
       const data = await response.json();
       setOrderResponse(data);
       clearItems(); // Borrar items del local storage una vez enviado el pedido
+      
+      const siteName = siteConfigs.site_name || siteConfig.name;
+      const isLogged = !!session;
+      const notificationMsg = isLogged 
+        ? `Gracias por comprar en ${siteName}. Ve a mis pedidos para tener seguimiento o consultar dudas por whatsapp.`
+        : `Gracias por comprar en ${siteName}. Ve a mis pedidos para tener seguimiento o consultar dudas por whatsapp. Inicia sesión para no perder tus pedidos.`;
+
+      useCartStore.getState().addNotification({
+        titulo: '¡Pedido Confirmado!',
+        mensaje: notificationMsg
+      });
+
+      toast.success(notificationMsg, {
+        duration: 8000,
+        description: 'Nueva notificación recibida'
+      });
+
       useCartStore.getState().setLastOrderFinished(true);
       useCartStore.getState().addToOrderHistory(data.id);
       setStep('success');
@@ -389,11 +407,11 @@ export default function CartSheet() {
                       <select 
                         value={customerData.sede_id || ''}
                         onChange={(e) => setCustomerData({ sede_id: Number(e.target.value) })}
-                        className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-gray-50 dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/10 outline-none transition-all text-sm font-medium appearance-none cursor-pointer"
+                        className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1E] border border-black/5 dark:border-white/10 outline-none transition-all text-sm font-medium appearance-none cursor-pointer text-gray-900 dark:text-white"
                       >
-                        <option value="" disabled>Selecciona una sede...</option>
+                        <option value="" disabled className="dark:bg-[#1A1A1E] dark:text-gray-400">Selecciona una sede...</option>
                         {sedes.map((sede) => (
-                          <option key={sede.id} value={sede.id}>{sede.nombre}</option>
+                          <option key={sede.id} value={sede.id} className="dark:bg-[#1A1A1E] dark:text-white">{sede.nombre}</option>
                         ))}
                       </select>
                       <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />

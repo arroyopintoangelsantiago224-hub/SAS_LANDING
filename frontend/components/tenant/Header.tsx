@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Menu, Search, User, X, Settings, LogOut, Bell } from 'lucide-react';
+import { ShoppingCart, Menu, Search, User, X, Settings, LogOut, Bell, CheckCircle2 } from 'lucide-react';
 import { siteConfig } from '@/config/site';
 import { useCartStore } from '@/store/useCartStore';
 import { useEffect, useState } from 'react';
@@ -11,8 +11,9 @@ import CartSheet from './CartSheet';
 import { signIn, signOut, useSession } from 'next-auth/react';
 export default function Header() {
   const { data: session } = useSession();
-  const { getItemCount, setCartOpen } = useCartStore();
+  const { getItemCount, setCartOpen, notifications, markNotificationsAsRead, markNotificationAsRead } = useCartStore();
   const itemCount = getItemCount();
+  const unreadCount = notifications.filter((n: any) => !n.read).length;
   const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -116,15 +117,87 @@ export default function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-3">
-            <button 
-              className={cn(
-                "relative p-2.5 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-white/5 active:scale-90",
-                (!isScrolled && !isMenuOpen) ? "text-white" : "text-gray-600 dark:text-white"
-              )}
-            >
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0A0A0C]" />
-            </button>
+            <div className="relative group/notifications">
+              <button 
+                className={cn(
+                  "relative p-2.5 rounded-xl transition-all hover:bg-gray-100 dark:hover:bg-white/5 active:scale-90",
+                  (!isScrolled && !isMenuOpen) ? "text-white" : "text-gray-600 dark:text-white"
+                )}
+              >
+                <Bell className="w-5 h-5" />
+                {mounted && unreadCount > 0 && (
+                  <span className="absolute top-2 right-2 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-[#0A0A0C] flex items-center justify-center text-[8px] font-black text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Notifications Dropdown */}
+              <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#0A0A0C] border border-black/5 dark:border-white/5 rounded-2xl shadow-2xl opacity-0 invisible group-hover/notifications:opacity-100 group-hover/notifications:visible transition-all duration-300 transform origin-top-right scale-95 group-hover/notifications:scale-100 z-[60] overflow-hidden">
+                <div className="p-4 border-b border-black/5 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-white/5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Notificaciones</p>
+                  {unreadCount > 0 && (
+                    <button 
+                      onClick={() => markNotificationsAsRead()}
+                      className="text-[9px] font-black uppercase tracking-widest text-blue-500 hover:text-blue-600 transition-colors"
+                    >
+                      Marcar todo como leído
+                    </button>
+                  )}
+                </div>
+                
+                <div className="max-h-[400px] overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-10 text-center space-y-2">
+                      <Bell className="w-8 h-8 text-gray-200 dark:text-white/5 mx-auto" />
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Sin notificaciones</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-black/5 dark:divide-white/5">
+                      {notifications.map((n: any) => (
+                        <div key={n.id} className={cn(
+                          "p-4 transition-colors relative group/item",
+                          !n.read ? "bg-black/[0.02] dark:bg-white/[0.02]" : "opacity-60"
+                        )}>
+                          <div className="flex items-start gap-3 pr-8">
+                            <div className={cn(
+                              "w-2 h-2 rounded-full mt-1.5 shrink-0",
+                              !n.read ? "bg-red-500" : "bg-transparent"
+                            )} />
+                            <div className="space-y-1">
+                              <p className="text-xs font-black text-gray-900 dark:text-white leading-tight">{n.titulo}</p>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 leading-relaxed">{n.mensaje}</p>
+                              <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tighter">
+                                {new Date(n.createdAt).toLocaleDateString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          {!n.read && (
+                            <button 
+                              onClick={() => markNotificationAsRead(n.id)}
+                              className="absolute top-4 right-4 p-1.5 rounded-lg bg-white dark:bg-white/10 border border-black/5 dark:border-white/10 text-gray-400 hover:text-green-500 hover:border-green-500/30 transition-all opacity-0 group-hover/item:opacity-100"
+                              title="Marcar como leída"
+                            >
+                              <CheckCircle2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {notifications.length > 0 && (
+                  <Link 
+                    href="/mis-pedidos"
+                    className="block p-4 text-center text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-black dark:hover:text-white transition-colors bg-gray-50/50 dark:bg-white/5"
+                  >
+                    Ver todo mi historial
+                  </Link>
+                )}
+              </div>
+            </div>
 
             <button 
               onClick={() => {
