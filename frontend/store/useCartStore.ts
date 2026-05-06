@@ -41,6 +41,7 @@ interface CartStore {
   notifications: any[];
   addNotification: (notification: any) => void;
   markNotificationsAsRead: () => void;
+  markNotificationAsRead: (id: number) => void;
 }
 
 export const useCartStore = create<CartStore>()(

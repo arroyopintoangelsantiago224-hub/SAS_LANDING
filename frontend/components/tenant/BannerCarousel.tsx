@@ -86,20 +86,20 @@ export default function BannerCarousel() {
                           let startTime: number | null = null;
                           const duration = 1200; // 1.2 seconds for a slower feel
 
-                          function animation(currentTime: number) {
+                          const animation = (currentTime: number) => {
                             if (startTime === null) startTime = currentTime;
                             const timeElapsed = currentTime - startTime;
                             const run = ease(timeElapsed, startPosition, distance, duration);
                             window.scrollTo(0, run);
                             if (timeElapsed < duration) requestAnimationFrame(animation);
-                          }
+                          };
 
-                          function ease(t: number, b: number, c: number, d: number) {
+                          const ease = (t: number, b: number, c: number, d: number) => {
                             t /= d / 2;
                             if (t < 1) return c / 2 * t * t + b;
                             t--;
                             return -c / 2 * (t * (t - 2) - 1) + b;
-                          }
+                          };
 
                           requestAnimationFrame(animation);
                         }

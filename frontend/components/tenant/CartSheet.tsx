@@ -587,7 +587,7 @@ export default function CartSheet() {
                             options={{
                               disableDefaultUI: true,
                               zoomControl: false,
-                              styles: [{ featureType: 'all', elementType: 'labels.text.fill', color: '#333333' }]
+                              styles: [{ featureType: 'all', elementType: 'labels.text.fill', stylers: [{ color: '#333333' }] }]
                             }}
                           >
                             <MarkerF
