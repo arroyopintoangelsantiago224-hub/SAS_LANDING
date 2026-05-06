@@ -37,7 +37,7 @@ export async function fetchPaymentMethods() {
 }
 
 // Admin functions
-export async function uploadImage(file: File, type: 'items' | 'banners' | 'site' | 'pagos', id?: number | string) {
+export async function uploadImage(file: File, type: 'items' | 'banners' | 'site' | 'pagos' | 'sounds', id?: number | string) {
   const formData = new FormData();
   formData.append('image', file);
   formData.append('type', type);
