@@ -2,24 +2,24 @@
 
 import { useCartStore } from '@/store/useCartStore';
 import { siteConfig } from '@/config/site';
-import { Trash2, Plus, Minus, X, Send, ShoppingBag, MapPin, CreditCard, CheckCircle, Loader2, ArrowLeft, Smartphone, User, Clock, Truck, AlertCircle, Store, ChevronDown } from 'lucide-react';
+import { Trash2, Plus, Minus, X, Send, ShoppingBag, MapPin, CreditCard, CheckCircle, Loader2, ArrowLeft, Smartphone, User, Clock, Truck, AlertCircle, Store, ChevronDown, Info } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { useSession, signIn } from 'next-auth/react';
-import { GoogleMap, useJsApiLoader, MarkerF } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, MarkerF, CircleF } from '@react-google-maps/api';
 import { toast } from 'sonner';
 
 type Step = 'cart' | 'shipping' | 'payment' | 'confirmation' | 'success';
 
 export default function CartSheet() {
   const { data: session } = useSession();
-  const { 
+  const {
     items, updateQuantity, removeItem, getTotal, clearCart, clearItems,
-    isCartOpen, setCartOpen, customerData, setCustomerData, 
-    paymentMethod, setPaymentMethod 
+    isCartOpen, setCartOpen, customerData, setCustomerData,
+    paymentMethod, setPaymentMethod
   } = useCartStore();
-  
+
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState<Step>('cart');
   const [loading, setLoading] = useState(false);
@@ -126,10 +126,10 @@ export default function CartSheet() {
       const data = await response.json();
       setOrderResponse(data);
       clearItems(); // Borrar items del local storage una vez enviado el pedido
-      
+
       const siteName = siteConfigs.site_name || siteConfig.name;
       const isLogged = !!session;
-      const notificationMsg = isLogged 
+      const notificationMsg = isLogged
         ? `Gracias por comprar en ${siteName}. Ve a mis pedidos para tener seguimiento o consultar dudas por whatsapp.`
         : `Gracias por comprar en ${siteName}. Ve a mis pedidos para tener seguimiento o consultar dudas por whatsapp. Inicia sesión para no perder tus pedidos.`;
 
@@ -181,7 +181,7 @@ export default function CartSheet() {
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 
-    // Esperamos 3 segundos (3000ms) para recolectar la mejor lectura posible
+    // Esperamos 5 segundos (5000ms) para recolectar la mejor lectura posible
     setTimeout(() => {
       navigator.geolocation.clearWatch(watchId);
       setDetectingLocation(false);
@@ -190,15 +190,15 @@ export default function CartSheet() {
         const { latitude, longitude, accuracy } = (bestPosition as GeolocationPosition).coords;
         setCustomerData({ latitud: latitude, longitud: longitude });
         setLocationAccuracy(accuracy);
-        
-        // Si la precisión es mayor a 50 metros, sugerimos calibración manual
-        if (accuracy > 50) {
+
+        // Si la precisión es mayor a 30 metros, sugerimos calibración manual
+        if (accuracy > 30) {
           setShowMap(true);
         }
       } else {
         alert('No se pudo obtener tu ubicación. Por favor, asegúrate de tener el GPS activo y los permisos concedidos.');
       }
-    }, 3000);
+    }, 5000);
   };
 
   const handleMapCalibration = (newLat: number, newLng: number) => {
@@ -207,12 +207,14 @@ export default function CartSheet() {
 
   const calculateEfficiency = (accuracy: number | null) => {
     if (!accuracy) return 0;
-    if (accuracy <= 25) return 100; // Antes 15
-    if (accuracy <= 60) return 98;  // Antes 50
-    if (accuracy <= 120) return 90; // Antes 100
-    if (accuracy <= 500) return 75;
-    if (accuracy <= 1000) return 50;
-    return 25;
+    if (accuracy <= 3) return 100;
+    if (accuracy <= 10) return 98;
+    if (accuracy <= 25) return 95;
+    if (accuracy <= 50) return 90;
+    if (accuracy <= 100) return 80;
+    if (accuracy <= 300) return 60;
+    if (accuracy <= 1000) return 40;
+    return 20;
   };
 
   const handleMarkAsPaid = async () => {
@@ -246,10 +248,10 @@ export default function CartSheet() {
   const handleWhatsAppRedirect = () => {
     if (!orderResponse) return;
 
-    const itemsList = (orderResponse.items || []).map((item: any) => 
+    const itemsList = (orderResponse.items || []).map((item: any) =>
       `- ${item.cantidad}x ${item.nombre_producto || item.nombre} ($${(Number(item.precio_unitario || item.precio) * item.cantidad).toLocaleString('es-CO')})`
     ).join('\n');
-    
+
     const message = `*Nuevo Pedido Confirmado (#${orderResponse.id})*\n\n` +
       `👤 *Cliente:* ${orderResponse.nombre_cliente || customerData.nombre}\n` +
       `📞 *Teléfono:* ${orderResponse.telefono_cliente || customerData.telefono}\n` +
@@ -259,7 +261,7 @@ export default function CartSheet() {
       `${itemsList}\n\n` +
       `*Total: $${Number(orderResponse.total).toLocaleString('es-CO')}*\n\n` +
       `🖼️ *Adjunto comprobante de pago por este medio.*`;
-    
+
     const targetPhone = orderResponse.sede?.telefono || siteConfig.whatsapp;
     const whatsappUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
@@ -272,7 +274,7 @@ export default function CartSheet() {
   return (
     <>
       {/* Backdrop */}
-      <div 
+      <div
         className={cn(
           "fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm transition-opacity duration-500",
           isCartOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -281,7 +283,7 @@ export default function CartSheet() {
       />
 
       {/* Drawer */}
-      <div 
+      <div
         className={cn(
           "fixed top-0 right-0 z-[70] h-full w-full max-w-md bg-white dark:bg-[#0A0A0C] shadow-2xl transition-transform duration-500 ease-out flex flex-col",
           isCartOpen ? "translate-x-0" : "translate-x-full"
@@ -291,7 +293,7 @@ export default function CartSheet() {
         <div className="p-6 border-b border-black/5 dark:border-white/5 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             {(step !== 'cart' && step !== 'success') && (
-              <button 
+              <button
                 onClick={() => {
                   if (step === 'shipping') setStep('cart');
                   if (step === 'payment') setStep('shipping');
@@ -314,7 +316,7 @@ export default function CartSheet() {
               {step === 'success' && '¡Pedido Recibido!'}
             </h2>
           </div>
-          <button 
+          <button
             onClick={() => {
               setCartOpen(false);
               setTimeout(() => setStep('cart'), 500);
@@ -337,7 +339,7 @@ export default function CartSheet() {
                   <p className="text-lg font-bold text-gray-900 dark:text-white">Tu carrito está vacío</p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">¡Explora nuestro catálogo y agrega algo increíble!</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setCartOpen(false)}
                   className="px-8 py-3 rounded-xl text-black font-black text-xs uppercase tracking-widest transition-transform active:scale-95"
                   style={{ backgroundColor: primaryColor }}
@@ -361,21 +363,21 @@ export default function CartSheet() {
                       </p>
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center space-x-3 bg-gray-50 dark:bg-white/5 rounded-lg p-1">
-                          <button 
+                          <button
                             onClick={() => updateQuantity(item.id, item.cantidad - 1)}
                             className="p-1 hover:bg-white dark:hover:bg-white/10 rounded-md transition-colors"
                           >
                             <Minus className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />
                           </button>
                           <span className="font-black text-gray-900 dark:text-white text-xs w-4 text-center">{item.cantidad}</span>
-                          <button 
+                          <button
                             onClick={() => updateQuantity(item.id, item.cantidad + 1)}
                             className="p-1 hover:bg-white dark:hover:bg-white/10 rounded-md transition-colors"
                           >
                             <Plus className="w-3.5 h-3.5 text-gray-600 dark:text-gray-400" />
                           </button>
                         </div>
-                        <button 
+                        <button
                           onClick={() => removeItem(item.id)}
                           className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors"
                         >
@@ -404,7 +406,7 @@ export default function CartSheet() {
                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Selecciona la Sede</label>
                     <div className="relative">
                       <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <select 
+                      <select
                         value={customerData.sede_id || ''}
                         onChange={(e) => setCustomerData({ sede_id: Number(e.target.value) })}
                         className="w-full pl-12 pr-10 py-3.5 rounded-2xl bg-gray-50 dark:bg-[#1A1A1E] border border-black/5 dark:border-white/10 outline-none transition-all text-sm font-medium appearance-none cursor-pointer text-gray-900 dark:text-white"
@@ -420,24 +422,24 @@ export default function CartSheet() {
 
                   {/* Selector de Tipo de Entrega */}
                   <div className="grid grid-cols-2 gap-3">
-                    <button 
+                    <button
                       onClick={() => setCustomerData({ tipo_entrega: 'domicilio' })}
                       className={cn(
                         "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
-                        customerData.tipo_entrega === 'domicilio' 
-                          ? "bg-[var(--accent)]/10 border-[var(--accent)] text-black dark:text-white" 
+                        customerData.tipo_entrega === 'domicilio'
+                          ? "bg-[var(--accent)]/10 border-[var(--accent)] text-black dark:text-white"
                           : "bg-gray-50 dark:bg-white/5 border-transparent text-gray-400"
                       )}
                     >
                       <Truck className="w-6 h-6" />
                       <span className="text-[10px] font-black uppercase tracking-widest">Domicilio</span>
                     </button>
-                    <button 
+                    <button
                       onClick={() => setCustomerData({ tipo_entrega: 'recoger' })}
                       className={cn(
                         "p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2",
-                        customerData.tipo_entrega === 'recoger' 
-                          ? "bg-[var(--accent)]/10 border-[var(--accent)] text-black dark:text-white" 
+                        customerData.tipo_entrega === 'recoger'
+                          ? "bg-[var(--accent)]/10 border-[var(--accent)] text-black dark:text-white"
                           : "bg-gray-50 dark:bg-white/5 border-transparent text-gray-400"
                       )}
                     >
@@ -457,7 +459,7 @@ export default function CartSheet() {
 
                 <div className="space-y-4 pl-9">
                   {!session && (
-                    <button 
+                    <button
                       onClick={() => signIn('google')}
                       className="w-full py-3 rounded-xl bg-blue-500/5 border border-blue-500/10 flex items-center justify-center space-x-2 text-[9px] font-black uppercase tracking-widest hover:bg-blue-500/10 transition-colors mb-4"
                     >
@@ -468,7 +470,7 @@ export default function CartSheet() {
 
                   <div className="space-y-1">
                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Nombre Completo</label>
-                    <input 
+                    <input
                       type="text"
                       value={customerData.nombre}
                       onChange={(e) => setCustomerData({ nombre: e.target.value })}
@@ -481,7 +483,7 @@ export default function CartSheet() {
                     <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Teléfono</label>
                     <div className="relative">
                       <Smartphone className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input 
+                      <input
                         type="tel"
                         value={customerData.telefono}
                         onChange={(e) => setCustomerData({ telefono: e.target.value })}
@@ -494,7 +496,7 @@ export default function CartSheet() {
                   {customerData.tipo_entrega === 'domicilio' && (
                     <div className="space-y-1 animate-in slide-in-from-top-4 duration-300">
                       <label className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 ml-1">Dirección Escrita</label>
-                      <textarea 
+                      <textarea
                         value={customerData.direccion}
                         onChange={(e) => setCustomerData({ direccion: e.target.value })}
                         rows={2}
@@ -518,8 +520,8 @@ export default function CartSheet() {
                       <div className="flex flex-col items-end gap-2">
                         <div className={cn(
                           "flex items-center gap-1.5 px-3 py-1 rounded-full border animate-in zoom-in",
-                          locationAccuracy && locationAccuracy <= 100 
-                            ? "bg-green-500/10 border-green-500/20 text-green-600" 
+                          locationAccuracy && locationAccuracy <= 100
+                            ? "bg-green-500/10 border-green-500/20 text-green-600"
                             : "bg-amber-500/10 border-amber-500/20 text-amber-600"
                         )}>
                           {locationAccuracy && locationAccuracy <= 100 ? (
@@ -549,14 +551,14 @@ export default function CartSheet() {
                     <p className="text-[10px] text-gray-500 leading-relaxed font-medium italic">
                       Recomendado: Vincular tu ubicación exacta para que el repartidor llegue sin errores.
                     </p>
-                    
-                    <button 
+
+                    <button
                       onClick={handleGetLocation}
                       disabled={detectingLocation}
                       className={cn(
                         "w-full py-4 rounded-2xl border-2 border-dashed transition-all flex items-center justify-center gap-3 group",
-                        customerData.latitud 
-                          ? "bg-green-500/5 border-green-500/20 text-green-600" 
+                        customerData.latitud
+                          ? "bg-green-500/5 border-green-500/20 text-green-600"
                           : "bg-gray-50 dark:bg-white/5 border-black/5 dark:border-white/10 hover:border-[var(--accent)] text-gray-500 hover:text-[var(--accent)]"
                       )}
                     >
@@ -576,18 +578,24 @@ export default function CartSheet() {
                     </button>
 
                     {/* Mapa de Calibración */}
-                    {siteConfigs.habilitar_calibracion === '1' && customerData.latitud && isLoaded && (
-                      <div className="space-y-3">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-center text-gray-400">Mapa de referencia</p>
-                        <div className="w-full h-44 rounded-3xl overflow-hidden border border-black/5 dark:border-white/10 shadow-lg shadow-black/5">
+                    {(siteConfigs.habilitar_calibracion === '1' || (locationAccuracy && locationAccuracy > 20)) && customerData.latitud && isLoaded && (
+                      <div className="space-y-3 animate-in zoom-in duration-500">
+                        <div className="flex items-center justify-between px-1">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Ajusta tu ubicación</p>
+                          <p className="text-[8px] font-bold text-amber-500 uppercase italic">Mantén presionado para mover el pin</p>
+                        </div>
+                        <div className="w-full h-56 rounded-3xl overflow-hidden border-2 border-black/5 dark:border-white/10 shadow-xl shadow-black/10 relative">
                           <GoogleMap
                             mapContainerStyle={{ width: '100%', height: '100%' }}
                             center={{ lat: customerData.latitud, lng: customerData.longitud }}
-                            zoom={17}
+                            zoom={19}
                             options={{
                               disableDefaultUI: true,
                               zoomControl: false,
-                              styles: [{ featureType: 'all', elementType: 'labels.text.fill', stylers: [{ color: '#333333' }] }]
+                              styles: [
+                                { featureType: 'all', elementType: 'labels.text.fill', stylers: [{ color: '#333333' }] },
+                                { featureType: 'poi', stylers: [{ visibility: 'off' }] }
+                              ]
                             }}
                           >
                             <MarkerF
@@ -597,7 +605,25 @@ export default function CartSheet() {
                                 if (e.latLng) handleMapCalibration(e.latLng.lat(), e.latLng.lng());
                               }}
                             />
+                            {locationAccuracy && (
+                              <CircleF
+                                center={{ lat: customerData.latitud, lng: customerData.longitud }}
+                                radius={locationAccuracy}
+                                options={{
+                                  fillColor: '#3B82F6',
+                                  fillOpacity: 0.1,
+                                  strokeColor: '#3B82F6',
+                                  strokeOpacity: 0.3,
+                                  strokeWeight: 1,
+                                  clickable: false,
+                                }}
+                              />
+                            )}
                           </GoogleMap>
+                          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-2 pointer-events-none">
+                            <Info className="w-3 h-3 text-[var(--accent)]" style={{ color: primaryColor }} />
+                            <span className="text-[8px] text-white font-black uppercase tracking-widest">Ubica el marcador sobre tu puerta</span>
+                          </div>
                         </div>
                       </div>
                     )}
@@ -611,15 +637,15 @@ export default function CartSheet() {
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-4">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Selecciona método de pago</p>
-                
+
                 {paymentMethods.map((method) => (
                   <button
                     key={method.id}
                     onClick={() => setPaymentMethod(method.nombre)}
                     className={cn(
                       "w-full p-5 rounded-2xl border transition-all flex items-center justify-between group",
-                      paymentMethod === method.nombre 
-                        ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xl scale-[1.02]" 
+                      paymentMethod === method.nombre
+                        ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white shadow-xl scale-[1.02]"
                         : "bg-gray-50 dark:bg-white/5 border-transparent hover:border-black/10 dark:hover:border-white/10"
                     )}
                   >
@@ -683,7 +709,7 @@ export default function CartSheet() {
               <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center">
                 <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
-              
+
               <div className="space-y-1">
                 <h3 className="text-xl font-black text-gray-900 dark:text-white uppercase tracking-tighter">¡Pedido Recibido!</h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -706,7 +732,7 @@ export default function CartSheet() {
                       </div>
                       <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Instrucciones de Pago</p>
                     </div>
-                    
+
                     {config.qr_imagen && selectedMethod.qr_imagen && (
                       <div className="aspect-square w-48 mx-auto bg-white p-3 rounded-3xl shadow-xl border border-black/5 animate-in zoom-in duration-700">
                         <img src={selectedMethod.qr_imagen} alt="QR" className="w-full h-full object-contain" />
@@ -734,7 +760,7 @@ export default function CartSheet() {
                           <p className="text-xs font-medium text-[var(--muted)]">Titular: {selectedMethod.titular}</p>
                         )}
                       </div>
-                      
+
                       <div className="p-4 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 mt-4">
                         <p className="text-[11px] text-gray-900 dark:text-white font-black uppercase tracking-tight leading-relaxed">
                           ⚠️ Por favor, una vez realices el pago, envía el comprobante por WhatsApp para confirmar tu pedido.
@@ -776,17 +802,17 @@ export default function CartSheet() {
                 }
                 return null;
               })()}
-              
+
               <div className="w-full space-y-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">¿Dudas o soporte?</p>
-                <button 
+                <button
                   onClick={handleWhatsAppRedirect}
                   className="w-full py-4 rounded-2xl bg-[#25D366] text-white font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-3 shadow-xl shadow-green-500/20 transition-all active:scale-95"
                 >
                   <Send className="w-4 h-4" />
                   <span>Contactar WhatsApp</span>
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setStep('cart');
                     setCartOpen(false);
@@ -811,14 +837,14 @@ export default function CartSheet() {
                 ${total.toLocaleString('es-CO')}
               </span>
             </div>
-            
-            <button 
-              disabled={loading || 
-                (step === 'payment' && !paymentMethod) || 
+
+            <button
+              disabled={loading ||
+                (step === 'payment' && !paymentMethod) ||
                 (step === 'shipping' && (
-                  !customerData.sede_id || 
-                  !customerData.nombre || 
-                  !customerData.telefono || 
+                  !customerData.sede_id ||
+                  !customerData.nombre ||
+                  !customerData.telefono ||
                   (customerData.tipo_entrega === 'domicilio' && !customerData.direccion)
                 ))
               }
@@ -828,7 +854,7 @@ export default function CartSheet() {
                 else if (step === 'payment') handleCreateOrder();
               }}
               className="w-full py-4 rounded-2xl text-black font-black text-sm uppercase tracking-widest flex items-center justify-center space-x-3 shadow-xl transition-all active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:scale-100"
-              style={{ 
+              style={{
                 backgroundColor: primaryColor,
                 boxShadow: loading ? 'none' : `0 10px 20px -5px ${primaryColor}40`
               }}
@@ -845,7 +871,7 @@ export default function CartSheet() {
             </button>
 
             {step === 'cart' && (
-              <button 
+              <button
                 onClick={clearCart}
                 className="w-full py-2 text-gray-400 hover:text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors"
               >
