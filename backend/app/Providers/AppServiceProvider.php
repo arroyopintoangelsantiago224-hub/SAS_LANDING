@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL; // <--- Asegúrate de añadir esta línea
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Esto obliga a Laravel a generar todos los links como HTTPS
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }
