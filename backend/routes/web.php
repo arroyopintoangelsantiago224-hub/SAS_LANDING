@@ -3,7 +3,12 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return response()->json([
+        'status' => 'online',
+        'message' => 'SAS API Backend is running successfully',
+        'app' => config('app.name', 'Laravel Backend'),
+        'timestamp' => now()->toIso8601String()
+    ]);
 });
 
 use Illuminate\Support\Facades\Artisan;
